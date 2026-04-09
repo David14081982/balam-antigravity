@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1A1A18">
+<title>Tienda — Balam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+
+<style>
+/* ── Reset & Base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --bg:      #FAFAF8;
+  --bg2:     #F2EFE9;
+  --bg3:     #E8E3DB;
+  --ink:     #1A1A18;
+  --ink2:    #4A4A45;
+  --ink3:    #8A8880;
+  --gold:    #C8A96E;
+  --gold-d:  #A8893E;
+  --serif:   'Cormorant Garamond', Georgia, serif;
+  --sans:    'DM Sans', system-ui, sans-serif;
+  --mono:    'DM Mono', monospace;
+  --r-sm:    8px;
+  --r-md:    14px;
+  --r-lg:    20px;
+  --r-xl:    28px;
+  --trans:   all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); color: var(--ink); background: var(--bg); min-height: 100vh; }
+
+h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.1; }
+
+/* ── Header ────────────────────────────────────────────────────────────── */
+.store-header {
+  background: var(--ink);
+  color: white;
+  padding: 48px 28px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+
+.balam-badge {
+  font-family: var(--serif);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 400;
+}
+
+.store-logo-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.store-logo-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-logo-placeholder {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.6);
+}
+
+.store-name {
+  font-family: var(--serif);
+  font-size: clamp(28px, 7vw, 42px);
+  font-weight: 300;
+  color: white;
+  letter-spacing: -0.2px;
+}
+
+.store-description {
+  font-size: 14px;
+  color: rgba(255,255,255,0.55);
+  font-weight: 300;
+  max-width: 320px;
+  line-height: 1.55;
+}
+
+.store-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+}
+
+/* ── Category tabs ─────────────────────────────────────────────────────── */
+.cat-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--bg3);
+  padding: 10px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  display: flex;
+  gap: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.cat-bar::-webkit-scrollbar { display: none; }
+
+.cat-chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12.5px;
+  font-weight: 400;
+  cursor: pointer;
+  border: 1px solid var(--bg3);
+  color: var(--ink2);
+  background: white;
+  transition: var(--trans);
+  white-space: nowrap;
+}
+.cat-chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+.cat-chip:active { transform: scale(0.95); }
+
+/* ── Garment grid ──────────────────────────────────────────────────────── */
+.catalog-section {
+  padding: 24px 16px 80px;
+}
+
+.section-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  font-weight: 400;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.garments-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 480px) {
+  .garments-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 720px) {
+  .garments-grid { grid-template-columns: repeat(4, 1fr); }
+  .catalog-section { padding: 32px 28px 80px; }
+}
+
+.garment-card {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+}
+
+.garment-img-wrap {
+  width: 100%;
+  aspect-ratio: 5/6;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg2);
+  position: relative;
+  transition: var(--trans);
+}
+
+.garment-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.garment-card:hover .garment-img-wrap img { transform: scale(1.04); }
+
+.garment-try-btn {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: var(--ink);
+  color: white;
+  border: none;
+  border-radius: 100px;
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 400;
+  padding: 9px 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0;
+  transition: var(--trans);
+  pointer-events: none;
+  letter-spacing: 0.01em;
+}
+
+.garment-card:hover .garment-try-btn,
+.garment-card:focus-within .garment-try-btn {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: all;
+}
+
+/* Always visible on touch */
+@media (hover: none) {
+  .garment-try-btn {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: all;
+    font-size: 12px;
+    padding: 7px 14px;
+  }
+}
+
+.garment-info {
+  padding: 8px 2px 0;
+}
+.garment-sizes { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.garment-size-chip { font-size: 10px; padding: 2px 8px; border-radius: 100px; border: 1px solid var(--bg3); color: var(--ink3); background: var(--bg); line-height: 1.5; }
+
+.garment-brand {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  font-weight: 400;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.garment-name {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 400;
+  line-height: 1.3;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.garment-price {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink2);
+}
+
+/* ── Skeleton loader ────────────────────────────────────────────────────── */
+@keyframes shimmer { to { background-position: -200% 0; } }
+.skeleton {
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--bg3) 50%, var(--bg2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: var(--r-md);
+}
+
+.skeleton-card { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-img { width: 100%; aspect-ratio: 5/6; }
+.skeleton-line { height: 10px; border-radius: 4px; }
+.skeleton-line.short { width: 55%; }
+.skeleton-line.medium { width: 75%; }
+
+/* ── Empty / Error states ───────────────────────────────────────────────── */
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 32px;
+  text-align: center;
+  gap: 12px;
+}
+
+.state-icon {
+  font-size: 44px;
+  opacity: 0.25;
+  margin-bottom: 4px;
+}
+
+.state-title {
+  font-family: var(--serif);
+  font-size: 26px;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+.state-sub {
+  font-size: 14px;
+  color: var(--ink3);
+  font-weight: 300;
+  max-width: 260px;
+  line-height: 1.5;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.store-footer {
+  padding: 24px 28px;
+  border-top: 1px solid var(--bg3);
+  text-align: center;
+}
+.store-footer a {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--ink3);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  font-weight: 300;
+  transition: color 0.2s;
+}
+.store-footer a:hover { color: var(--ink); }
+.powered-by {
+  font-size: 11px;
+  color: var(--ink3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header (populated by JS) ─────────────────────────────────────────── -->
+<header class="store-header" id="store-header">
+  <div class="balam-badge">Balam · Moda Virtual</div>
+  <div class="store-logo-wrap" id="logo-wrap">
+    <span class="store-logo-placeholder" id="logo-placeholder">—</span>
+  </div>
+  <h1 class="store-name" id="store-name">Cargando…</h1>
+</header>
+
+<!-- ── Category filter ──────────────────────────────────────────────────── -->
+<nav class="cat-bar" id="cat-bar" style="display:none"></nav>
+
+<!-- ── Main content ─────────────────────────────────────────────────────── -->
+<main id="main-content">
+  <!-- Skeletons shown while loading -->
+  <section class="catalog-section" id="skeleton-section">
+    <p class="section-label">Cargando catálogo…</p>
+    <div class="garments-grid" id="skeleton-grid"></div>
+  </section>
+</main>
+
+<!-- ── Footer ───────────────────────────────────────────────────────────── -->
+<footer class="store-footer" style="display:none" id="store-footer">
+  <p class="powered-by">Powered by</p>
+  <a href="doji-pwa/frontend/index.html">Balam</a>
+</footer>
+
+<script>
+const API = 'http://localhost:3001/api';
+const TRYON_APP = 'doji-pwa/frontend/index.html';
+
+const CATEGORY_LABELS = {
+  all:            'Todo',
+  tops:           'Tops',
+  bottoms:        'Pantalones',
+  'one-pieces':   'Vestidos',
+  accessory:      'Accesorios',
+  guayabera:      'Guayaberas',
+  'tshirt-premium':'Camisetas',
+  'linen-shirt':  'Lino',
+  polo:           'Polos',
+  pants:          'Pantalones',
+  shorts:         'Shorts',
+  jeans:          'Jeans',
+  dress:          'Vestidos',
+  jumpsuit:       'Jumpsuits',
+  hat:            'Sombreros',
+  collar:         'Collares',
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let allGarments = [];
+let activeCategory = 'all';
+
+// ── Init ───────────────────────────────────────────────────────────────────
+(async () => {
+  const slug = new URLSearchParams(location.search).get('slug');
+
+  if (!slug) {
+    showError('Falta el parámetro ?slug=', 'Agrega ?slug=nombre-empresa a la URL.');
+    return;
+  }
+
+  document.title = `Tienda — Balam`;
+  renderSkeletons(6);
+
+  try {
+    const res = await fetch(`${API}/companies/${encodeURIComponent(slug)}/garments?limit=100`);
+
+    if (res.status === 404) {
+      showError('Tienda no encontrada', `No existe ninguna tienda con el slug "${slug}".`);
+      return;
+    }
+    if (!res.ok) throw new Error(`Error ${res.status}`);
+
+    const { company, garments } = await res.json();
+    allGarments = garments || [];
+
+    renderHeader(company);
+    buildCategoryBar(allGarments);
+    renderGarments(allGarments);
+    document.getElementById('store-footer').style.display = '';
+
+  } catch (err) {
+    console.error(err);
+    showError('Error al cargar la tienda', 'Verifica que el servidor esté corriendo e intenta de nuevo.');
+  }
+})();
+
+// ── Render header ──────────────────────────────────────────────────────────
+function renderHeader(company) {
+  document.title = `${company.name} — Balam`;
+  document.getElementById('store-name').textContent = company.name;
+
+  if (company.logo_url) {
+    const img = document.createElement('img');
+    img.src = company.logo_url;
+    img.alt = company.name;
+    const wrap = document.getElementById('logo-wrap');
+    wrap.innerHTML = '';
+    wrap.appendChild(img);
+  } else {
+    document.getElementById('logo-placeholder').textContent = company.name.charAt(0).toUpperCase();
+  }
+
+  if (company.description) {
+    const desc = document.createElement('p');
+    desc.className = 'store-description';
+    desc.textContent = company.description;
+    document.getElementById('store-header').appendChild(desc);
+  }
+}
+
+// ── Category bar ───────────────────────────────────────────────────────────
+function buildCategoryBar(garments) {
+  const cats = ['all', ...new Set(garments.map(g => g.category).filter(Boolean))];
+  if (cats.length <= 2) return; // Only "all" + one category → hide bar
+
+  const bar = document.getElementById('cat-bar');
+  bar.style.display = '';
+
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-chip' + (cat === 'all' ? ' active' : '');
+    btn.textContent = CATEGORY_LABELS[cat] || cat;
+    btn.dataset.cat = cat;
+    btn.addEventListener('click', () => {
+      activeCategory = cat;
+      bar.querySelectorAll('.cat-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+      const filtered = cat === 'all' ? allGarments : allGarments.filter(g => g.category === cat);
+      renderGarments(filtered);
+    });
+    bar.appendChild(btn);
+  });
+}
+
+// ── Render garment cards ───────────────────────────────────────────────────
+function renderGarments(garments) {
+  const main = document.getElementById('main-content');
+  main.innerHTML = '';
+
+  if (garments.length === 0) {
+    main.innerHTML = `
+      <div class="state-container">
+        <div class="state-icon">☁</div>
+        <p class="state-title">Sin prendas</p>
+        <p class="state-sub">Esta categoría no tiene prendas disponibles por el momento.</p>
+      </div>`;
+    return;
+  }
+
+  const section = document.createElement('section');
+  section.className = 'catalog-section';
+
+  const label = document.createElement('p');
+  label.className = 'section-label';
+  label.textContent = `${garments.length} prenda${garments.length !== 1 ? 's' : ''}`;
+  section.appendChild(label);
+
+  const grid = document.createElement('div');
+  grid.className = 'garments-grid';
+
+  garments.forEach(g => grid.appendChild(buildCard(g)));
+  section.appendChild(grid);
+  main.appendChild(section);
+}
+
+function buildCard(g) {
+  const card = document.createElement('article');
+  card.className = 'garment-card';
+
+  const price = g.price ? `$${Number(g.price).toLocaleString('es-MX')} MXN` : '';
+
+  card.innerHTML = `
+    <div class="garment-img-wrap">
+      <img src="${escHtml(g.image)}" alt="${escHtml(g.name)}" loading="lazy">
+      <button class="garment-try-btn" aria-label="Probar ${escHtml(g.name)}">Probar</button>
+    </div>
+    <div class="garment-info">
+      <span class="garment-brand">${escHtml(g.brand || '')}</span>
+      <p class="garment-name">${escHtml(g.name)}</p>
+      ${price ? `<span class="garment-price">${price}</span>` : ''}
+      ${Array.isArray(g.sizes) && g.sizes.length ? `<div class="garment-sizes">${g.sizes.map(s=>`<span class="garment-size-chip">${escHtml(s)}</span>`).join('')}</div>` : ''}
+    </div>`;
+
+  card.querySelector('.garment-try-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    location.href = `${TRYON_APP}?garment=${encodeURIComponent(g.id)}`;
+  });
+
+  card.addEventListener('click', () => {
+    location.href = `${TRYON_APP}?garment=${encodeURIComponent(g.id)}`;
+  });
+
+  return card;
+}
+
+// ── Skeleton ───────────────────────────────────────────────────────────────
+function renderSkeletons(n) {
+  const grid = document.getElementById('skeleton-grid');
+  for (let i = 0; i < n; i++) {
+    grid.innerHTML += `
+      <div class="skeleton-card">
+        <div class="skeleton skeleton-img"></div>
+        <div class="skeleton skeleton-line short"></div>
+        <div class="skeleton skeleton-line medium"></div>
+      </div>`;
+  }
+}
+
+// ── Error state ────────────────────────────────────────────────────────────
+function showError(title, sub) {
+  document.getElementById('store-name').textContent = 'Balam';
+  document.getElementById('logo-placeholder').textContent = '?';
+  document.getElementById('main-content').innerHTML = `
+    <div class="state-container">
+      <div class="state-icon">✦</div>
+      <p class="state-title">${escHtml(title)}</p>
+      <p class="state-sub">${escHtml(sub)}</p>
+    </div>`;
+  document.getElementById('skeleton-section')?.remove();
+}
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1A1A18">
+<title>Balam — Portal de Empresas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:     #fafaf8;
+  --bg2:    #f2f0ec;
+  --bg3:    #e8e5df;
+  --ink:    #1a1a18;
+  --ink2:   #4a4a45;
+  --ink3:   #8a8880;
+  --gold:   #c8a96e;
+  --red:    #c0392b;
+  --green:  #27ae60;
+  --serif:  'Cormorant Garamond', Georgia, serif;
+  --sans:   'DM Sans', system-ui, sans-serif;
+  --mono:   'DM Mono', monospace;
+  --radius: 14px;
+  --trans:  all 0.28s cubic-bezier(0.16,1,0.3,1);
+}
+
+body { font-family: var(--sans); background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+/* ── Auth screens ───────────────────────────────────────────────────────── */
+.auth-wrap {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--ink); padding: 24px;
+}
+.auth-box {
+  background: #fff; border-radius: 20px; padding: 44px 36px 36px;
+  width: 100%; max-width: 400px;
+}
+.auth-back { position: fixed; top: 16px; left: 16px; background: rgba(255,255,255,0.12); border: none; color: #fff; border-radius: 50px; padding: 8px 16px; font-family: var(--sans); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; z-index: 10; }
+.auth-back:active { opacity: 0.7; }
+.auth-logo { font-family: var(--serif); font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; }
+.auth-title { font-family: var(--serif); font-size: clamp(28px, 6vw, 36px); font-weight: 300; line-height: 1.1; margin-bottom: 8px; }
+.auth-sub   { font-size: 14px; color: var(--ink3); font-weight: 300; margin-bottom: 32px; line-height: 1.5; }
+
+.field { margin-bottom: 18px; }
+.field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink3); margin-bottom: 7px; }
+.field input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--bg3);
+  border-radius: 10px; font-size: 14px; font-family: var(--sans);
+  background: var(--bg); color: var(--ink); outline: none; transition: border-color 0.15s;
+}
+.field input:focus { border-color: var(--ink); }
+.field-hint { font-size: 11px; color: var(--ink3); margin-top: 5px; }
+
+.btn-main {
+  width: 100%; padding: 14px; background: var(--ink); color: #fff;
+  border: none; border-radius: 100px; font-family: var(--serif);
+  font-size: 18px; font-weight: 400; cursor: pointer; transition: var(--trans);
+  margin-top: 4px; letter-spacing: 0.01em;
+}
+.btn-main:hover { opacity: 0.85; }
+.btn-main:active { transform: scale(0.98); }
+.btn-main:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.auth-switch { text-align: center; margin-top: 22px; font-size: 13px; color: var(--ink3); }
+.auth-switch a { color: var(--ink); font-weight: 500; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+.field-error { font-size: 12px; color: var(--red); margin-top: 5px; display: none; }
+.form-error { background: #fff0ee; border: 1px solid #ffd5d0; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: var(--red); margin-bottom: 18px; display: none; }
+
+/* ── Dashboard ──────────────────────────────────────────────────────────── */
+#dashboard { display: none; }
+
+.dash-header {
+  background: var(--ink); color: #fff;
+  padding: 20px 28px; display: flex; align-items: center; gap: 16px;
+}
+.dash-header h1 { font-family: var(--serif); font-size: 20px; font-weight: 300; letter-spacing: 0.04em; }
+.dash-header .company-slug { font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 0.08em; font-family: var(--mono); }
+.dash-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+.btn-outline-white { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 7px 14px; font-size: 12px; font-family: var(--sans); cursor: pointer; transition: background 0.2s; }
+.btn-outline-white:hover { background: rgba(255,255,255,0.12); }
+
+.dash-body { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+
+.dash-grid { display: grid; grid-template-columns: 340px 1fr; gap: 28px; align-items: start; }
+@media (max-width: 800px) { .dash-grid { grid-template-columns: 1fr; } }
+
+/* Card */
+.card { background: #fff; border: 1px solid var(--bg3); border-radius: var(--radius); padding: 26px; }
+.card-title { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); margin-bottom: 20px; }
+
+/* Upload area */
+.img-drop {
+  border: 2px dashed var(--bg3); border-radius: 10px; height: 190px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: var(--trans); position: relative; overflow: hidden; background: var(--bg);
+}
+.img-drop:hover { border-color: var(--ink); background: var(--bg2); }
+.img-drop.has-img { border-style: solid; }
+.img-drop img { width: 100%; height: 100%; object-fit: contain; }
+.img-drop .ph { text-align: center; pointer-events: none; }
+.img-drop .ph svg { opacity: 0.25; margin-bottom: 8px; }
+.img-drop .ph p { font-size: 13px; color: var(--ink3); line-height: 1.5; }
+.img-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* Form fields in dashboard */
+.dash-field { margin-bottom: 14px; }
+.dash-field label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink3); margin-bottom: 5px; }
+.dash-field input, .dash-field select, .dash-field textarea {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--bg3);
+  border-radius: 8px; font-size: 13.5px; font-family: var(--sans);
+  background: var(--bg); color: var(--ink); outline: none; transition: border-color 0.15s;
+}
+.dash-field input:focus, .dash-field select:focus, .dash-field textarea:focus { border-color: var(--ink); }
+.dash-field textarea { resize: vertical; min-height: 60px; }
+
+/* Size chips */
+.size-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.size-chip {
+  padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 500;
+  cursor: pointer; border: 1.5px solid var(--bg3); background: var(--bg);
+  color: var(--ink2); transition: all 0.15s; user-select: none; font-family: var(--sans);
+}
+.size-chip:hover { border-color: var(--ink); color: var(--ink); }
+.size-chip.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.btn-add {
+  width: 100%; padding: 13px; background: var(--ink); color: #fff;
+  border: none; border-radius: 100px; font-family: var(--serif);
+  font-size: 17px; cursor: pointer; transition: var(--trans); margin-top: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-add:hover { opacity: 0.85; }
+.btn-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Garment grid */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); }
+.count-pill { background: var(--bg3); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+#garment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+
+.g-card { background: #fff; border: 1px solid var(--bg3); border-radius: var(--radius); overflow: hidden; transition: box-shadow 0.2s; }
+.g-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.g-card img { width: 100%; height: 170px; object-fit: cover; background: var(--bg2); display: block; }
+.g-info { padding: 11px; }
+.g-brand { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink3); margin-bottom: 2px; }
+.g-name  { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.g-sizes { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 6px; }
+.g-size-chip { font-size: 9px; padding: 2px 6px; border-radius: 100px; border: 1px solid var(--bg3); color: var(--ink3); background: var(--bg); line-height: 1.4; }
+.g-meta  { display: flex; align-items: center; justify-content: space-between; }
+.g-price { font-family: var(--mono); font-size: 12px; color: var(--ink2); }
+.g-cat   { font-size: 10px; background: var(--bg2); padding: 2px 7px; border-radius: 20px; color: var(--ink3); }
+.btn-del { width: 100%; margin-top: 4px; padding: 6px; background: #fff0ee; color: var(--red); border: 1.5px solid #ffd5d0; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background 0.15s; }
+.btn-del:hover { background: #ffe0db; }
+.btn-edit { width: 100%; margin-top: 8px; padding: 6px; background: var(--bg2); color: var(--ink); border: 1.5px solid var(--bg3); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background 0.15s; }
+.btn-edit:hover { background: var(--bg3); }
+.btn-hide { width: 100%; margin-top: 4px; padding: 6px; background: #fff8ec; color: #b07d1a; border: 1.5px solid #f0d9a0; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); transition: background 0.15s; }
+.btn-hide:hover { background: #fdf0ce; }
+.g-card.hidden-card { opacity: 0.5; }
+.hidden-badge { display:inline-block; background:#fff8ec; color:#b07d1a; border:1px solid #f0d9a0; border-radius:20px; font-size:10px; font-weight:700; padding:2px 8px; margin-bottom:4px; }
+
+/* Edit modal */
+.modal-overlay { position:fixed; inset:0; background:rgba(26,26,24,0.55); z-index:200; display:flex; align-items:center; justify-content:center; padding:16px; }
+.modal-box { background:#fff; border-radius:16px; padding:28px; width:100%; max-width:420px; max-height:90vh; overflow-y:auto; }
+.modal-title { font-size:15px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:20px; }
+.modal-actions { display:flex; gap:8px; margin-top:20px; }
+.btn-modal-save { flex:1; padding:11px; background:var(--ink); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:var(--sans); }
+.btn-modal-save:hover { opacity:0.85; }
+.btn-modal-cancel { padding:11px 18px; background:var(--bg2); color:var(--ink); border:1.5px solid var(--bg3); border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; font-family:var(--sans); }
+.btn-modal-cancel:hover { background:var(--bg3); }
+
+.empty-grid { grid-column: 1/-1; text-align: center; padding: 48px 20px; color: var(--ink3); font-size: 14px; }
+
+/* Spinner */
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Store link banner */
+.store-banner {
+  background: linear-gradient(135deg, var(--ink) 0%, #2c2c2a 100%);
+  border-radius: var(--radius); padding: 20px 22px; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.store-banner p { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 4px; }
+.store-banner strong { font-size: 15px; color: #fff; font-family: var(--mono); letter-spacing: 0.03em; }
+.btn-visit { background: white; color: var(--ink); border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--sans); white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0; }
+.btn-visit:hover { opacity: 0.85; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: #fff; padding: 12px 22px; border-radius: 40px;
+  font-size: 14px; font-weight: 500; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 999; white-space: nowrap; pointer-events: none;
+}
+.toast.show  { transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--red); }
+
+/* Category map */
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH ══════════════════════════════════════════════════════════════════ -->
+<div id="auth-wrap" class="auth-wrap">
+  <button class="auth-back" onclick="history.back()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Volver
+  </button>
+
+  <!-- LOGIN -->
+  <div class="auth-box" id="box-login" style="display:none">
+
+    <h1 class="auth-title">Bienvenido<br>de vuelta</h1>
+    <p class="auth-sub">Accede a tu panel para gestionar el catálogo de tu tienda.</p>
+    <div class="form-error" id="login-error"></div>
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input type="email" id="l-email" placeholder="hola@empresa.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="btn-main" id="btn-login" onclick="doLogin()">Entrar</button>
+    <p class="auth-switch">¿Olvidaste tu contraseña? <a onclick="showReset()">Cambiarla</a></p>
+    <p class="auth-switch" style="margin-top:8px">¿Aún no tienes cuenta? <a onclick="showRegister()">Registra tu empresa</a></p>
+  </div>
+
+  <!-- RESET PASSWORD -->
+  <div class="auth-box" id="box-reset" style="display:none">
+
+    <h1 class="auth-title">Nueva<br>contraseña</h1>
+    <p class="auth-sub">Ingresa tu correo y elige una nueva contraseña. No se enviará ningún email.</p>
+    <div class="form-error" id="reset-error"></div>
+    <div class="form-error" id="reset-success" style="background:#edfbf3;border-color:#b8f0cf;color:#27ae60;display:none"></div>
+    <div class="field">
+      <label>Correo electrónico</label>
+      <input type="email" id="reset-email" placeholder="hola@empresa.com">
+    </div>
+    <div class="field">
+      <label>Nueva contraseña</label>
+      <input type="password" id="reset-pass" placeholder="Mínimo 8 caracteres"
+             onkeydown="if(event.key==='Enter') doReset()">
+    </div>
+    <div class="field">
+      <label>Confirmar contraseña</label>
+      <input type="password" id="reset-pass2" placeholder="Repite la contraseña"
+             onkeydown="if(event.key==='Enter') doReset()">
+    </div>
+    <button class="btn-main" id="btn-reset" onclick="doReset()">Guardar contraseña</button>
+    <p class="auth-switch" style="margin-top:16px"><a onclick="showLogin()">← Volver al login</a></p>
+  </div>
+
+  <!-- REGISTER -->
+  <div class="auth-box" id="box-register">
+
+    <h1 class="auth-title">Registra<br>tu empresa</h1>
+    <p class="auth-sub">Crea tu tienda virtual con IA en minutos.</p>
+    <div class="form-error" id="register-error"></div>
+
+    <!-- Logo upload -->
+    <div class="field">
+      <label>Logotipo <span style="color:var(--ink3);font-weight:300;text-transform:none;letter-spacing:0">(opcional)</span></label>
+      <div id="r-logo-drop" onclick="document.getElementById('r-logo-input').click()"
+           style="width:90px;height:90px;border-radius:50%;border:2px dashed var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--bg);transition:border-color 0.2s;position:relative;"
+           onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--bg3)'">
+        <img id="r-logo-preview" style="display:none;width:100%;height:100%;object-fit:cover;" alt="logo">
+        <span id="r-logo-placeholder" style="font-size:28px;opacity:0.25;">🏢</span>
+      </div>
+      <p class="field-hint" style="margin-top:6px;">JPG, PNG o WEBP · máx. 5MB</p>
+      <input type="file" id="r-logo-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewLogo(this)">
+    </div>
+
+    <div class="field">
+      <label>Nombre de la empresa *</label>
+      <input type="text" id="r-name" placeholder="Ej: Casa Blanca Moda">
+    </div>
+    <div class="field">
+      <label>Slug (URL de tu tienda) *</label>
+      <input type="text" id="r-slug" placeholder="casa-blanca-moda" oninput="sanitizeSlug(this)">
+      <p class="field-hint" id="slug-preview">Tu tienda: balam.io/tienda?slug=…</p>
+    </div>
+    <div class="field">
+      <label>Correo electrónico *</label>
+      <input type="email" id="r-email" placeholder="hola@empresa.com" autocomplete="email">
+    </div>
+    <div class="field">
+      <label>Contraseña *</label>
+      <input type="password" id="r-pass" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+    </div>
+
+    <!-- Opcionales -->
+    <div style="border-top:1px solid var(--bg3);margin:18px 0 16px;"></div>
+    <p style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;">Opcional</p>
+
+    <div class="field">
+      <label>Sitio web</label>
+      <input type="url" id="r-website" placeholder="https://mitienda.com">
+    </div>
+    <div class="field">
+      <label>Instagram</label>
+      <input type="text" id="r-instagram" placeholder="@mitienda">
+    </div>
+    <div class="field">
+      <label>Facebook</label>
+      <input type="text" id="r-facebook" placeholder="facebook.com/mitienda">
+    </div>
+    <div class="field">
+      <label>TikTok</label>
+      <input type="text" id="r-tiktok" placeholder="@mitienda">
+    </div>
+
+    <button class="btn-main" id="btn-register" onclick="doRegister()">Registrar mi empresa</button>
+    <p class="auth-switch">¿Ya tienes cuenta? <a onclick="showLogin()">Inicia sesión</a></p>
+  </div>
+
+</div>
+
+<!-- ══ DASHBOARD ══════════════════════════════════════════════════════════════ -->
+<div id="dashboard">
+
+  <div class="dash-header">
+    <div>
+      <h1 id="dash-company-name">Mi Empresa</h1>
+      <p class="company-slug" id="dash-company-slug"></p>
+    </div>
+    <div class="dash-right">
+      <button class="btn-outline-white" onclick="history.back()">← App</button>
+      <button class="btn-outline-white" id="btn-view-store" onclick="viewStore()">Ver tienda</button>
+      <button class="btn-outline-white" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- Store URL banner -->
+    <div class="store-banner">
+      <div>
+        <p>Tu tienda pública está en:</p>
+        <strong id="store-url-text">—</strong>
+      </div>
+      <button class="btn-visit" onclick="viewStore()">Visitar →</button>
+    </div>
+
+    <div class="dash-grid">
+
+      <!-- Add garment form -->
+      <div class="card">
+        <p class="card-title">Agregar prenda</p>
+
+        <div class="dash-field">
+          <label>Foto de la prenda *</label>
+          <div class="img-drop" id="img-drop">
+            <div class="ph">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <p>Clic para seleccionar<br><strong>JPG, PNG o WEBP</strong></p>
+            </div>
+            <img id="img-preview" style="display:none" alt="preview">
+            <input type="file" id="img-input" accept="image/jpeg,image/png,image/webp">
+          </div>
+        </div>
+
+        <div class="dash-field"><label>Marca *</label><input type="text" id="f-brand" placeholder="Ej: Mi Marca"></div>
+        <div class="dash-field"><label>Nombre *</label><input type="text" id="f-name" placeholder="Ej: Camisa Oxford"></div>
+        <div class="dash-field"><label>Precio (MXN)</label><input type="number" id="f-price" placeholder="0" min="0"></div>
+
+        <div class="dash-field">
+          <label>Categoría *</label>
+          <select id="f-category" onchange="syncFashn()">
+            <option value="">— Selecciona —</option>
+            <option value="linen-shirt">Camisa de lino</option>
+            <option value="guayabera">Guayabera</option>
+            <option value="tshirt-premium">T-Shirt</option>
+            <option value="polo">Polo</option>
+            <option value="pants">Pantalón</option>
+            <option value="shorts">Shorts</option>
+            <option value="jeans">Jeans</option>
+            <option value="dress">Vestido</option>
+            <option value="jumpsuit">Jumpsuit</option>
+            <option value="hat">Sombrero / Gorra</option>
+            <option value="collar">Collar / Accesorio</option>
+          </select>
+        </div>
+
+        <div class="dash-field">
+          <label>Tipo Fashn.ai</label>
+          <select id="f-fashn">
+            <option value="tops">tops — Camisas, polos, t-shirts</option>
+            <option value="bottoms">bottoms — Pantalones, shorts</option>
+            <option value="one-pieces">one-pieces — Vestidos, jumpsuits</option>
+            <option value="accessory">accessory — Sombreros, collares</option>
+          </select>
+        </div>
+
+        <div class="dash-field" id="sizes-field" style="display:none">
+          <label>Tallas disponibles</label>
+          <div class="size-chips" id="size-chips"></div>
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <input type="text" id="f-custom-size" placeholder="Talla personalizada…"
+                   style="flex:1;padding:7px 10px;border:1.5px solid var(--bg3);border-radius:8px;font-size:13px;font-family:var(--sans);outline:none;"
+                   onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--bg3)'"
+                   onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSize();}">
+            <button type="button" onclick="addCustomSize()"
+                    style="padding:7px 14px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);white-space:nowrap;">
+              + Agregar
+            </button>
+          </div>
+          <input type="hidden" id="f-sizes" value="[]">
+        </div>
+        <div class="dash-field"><label>Descripción</label><textarea id="f-desc" placeholder="Descripción breve…"></textarea></div>
+
+        <button class="btn-add" id="btn-add" onclick="addGarment()">
+          <span id="btn-add-label">Agregar al catálogo</span>
+        </button>
+      </div>
+
+      <!-- Garment list -->
+      <div>
+        <div class="section-header">
+          <span class="section-title">Mis prendas</span>
+          <span class="count-pill" id="count-pill">0</span>
+        </div>
+        <div id="garment-grid">
+          <div class="empty-grid">Cargando prendas…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT MODAL ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="edit-modal" style="display:none" onclick="if(event.target===this)closeEditModal()">
+  <div class="modal-box">
+    <p class="modal-title">Editar prenda</p>
+    <input type="hidden" id="edit-id">
+    <div class="dash-field"><label>Marca *</label><input type="text" id="edit-brand"></div>
+    <div class="dash-field"><label>Nombre *</label><input type="text" id="edit-name"></div>
+    <div class="dash-field"><label>Precio (MXN)</label><input type="number" id="edit-price" min="0"></div>
+    <div class="dash-field">
+      <label>Categoría *</label>
+      <select id="edit-category" onchange="syncEditFashn()">
+        <option value="linen-shirt">Camisa de lino</option>
+        <option value="guayabera">Guayabera</option>
+        <option value="tshirt-premium">T-Shirt</option>
+        <option value="polo">Polo</option>
+        <option value="pants">Pantalón</option>
+        <option value="shorts">Shorts</option>
+        <option value="jeans">Jeans</option>
+        <option value="dress">Vestido</option>
+        <option value="jumpsuit">Jumpsuit</option>
+        <option value="hat">Sombrero / Gorra</option>
+        <option value="collar">Collar / Accesorio</option>
+      </select>
+    </div>
+    <div class="dash-field">
+      <label>Tipo Fashn.ai</label>
+      <select id="edit-fashn">
+        <option value="tops">tops</option>
+        <option value="bottoms">bottoms</option>
+        <option value="one-pieces">one-pieces</option>
+        <option value="accessory">accessory</option>
+      </select>
+    </div>
+    <div class="dash-field" id="edit-sizes-field">
+      <label>Tallas disponibles</label>
+      <div class="size-chips" id="edit-size-chips"></div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <input type="text" id="edit-custom-size" placeholder="Talla personalizada…"
+               style="flex:1;padding:7px 10px;border:1.5px solid var(--bg3);border-radius:8px;font-size:13px;font-family:var(--sans);outline:none;"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addEditCustomSize();}">
+        <button type="button" onclick="addEditCustomSize()"
+                style="padding:7px 14px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);">
+          + Agregar
+        </button>
+      </div>
+      <input type="hidden" id="edit-sizes" value="[]">
+    </div>
+    <div class="dash-field"><label>Descripción</label><textarea id="edit-desc"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn-modal-save" id="btn-save-edit" onclick="saveEdit()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3001/api';
+
+// ── State ──────────────────────────────────────────────────────────────────
+let companyToken    = localStorage.getItem('company_token') || null;
+let companyData     = JSON.parse(localStorage.getItem('company_data') || 'null');
+
+const CAT_LABELS = {
+  'linen-shirt':'Camisa','guayabera':'Guayabera','tshirt-premium':'T-Shirt',
+  'polo':'Polo','pants':'Pantalón','shorts':'Shorts','jeans':'Jeans',
+  'dress':'Vestido','jumpsuit':'Jumpsuit','hat':'Sombrero','collar':'Collar',
+};
+const FASHN_MAP = {
+  'linen-shirt':'tops','guayabera':'tops','tshirt-premium':'tops','polo':'tops',
+  'pants':'bottoms','shorts':'bottoms','jeans':'bottoms',
+  'dress':'one-pieces','jumpsuit':'one-pieces','hat':'accessory','collar':'accessory',
+};
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  if (companyToken) {
+    // Validar token contra el servidor
+    try {
+      const resp = await fetch(`${API}/company/me`, {
+        headers: { 'Authorization': 'Bearer ' + companyToken }
+      });
+      if (resp.ok) {
+        const d = await resp.json();
+        companyData = d.company;
+        localStorage.setItem('company_data', JSON.stringify(companyData));
+        showDashboard();
+        return;
+      }
+    } catch(e) {}
+    // Token inválido/expirado — limpiar y mostrar login
+    localStorage.removeItem('company_token');
+    localStorage.removeItem('company_data');
+    companyToken = null; companyData = null;
+  }
+  // Sin token: si ya se registró antes → login; si es primera vez → registro
+  const hasRegistered = localStorage.getItem('company_registered');
+  if (hasRegistered) {
+    showLogin();
+  } else {
+    showRegister();
+  }
+});
+
+// ── Auth helpers ───────────────────────────────────────────────────────────
+function authHeaders() {
+  return { 'Authorization': 'Bearer ' + companyToken, 'Content-Type': 'application/json' };
+}
+
+function previewLogo(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('r-logo-preview').src = e.target.result;
+    document.getElementById('r-logo-preview').style.display = 'block';
+    document.getElementById('r-logo-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function showLogin()    {
+  document.getElementById('box-login').style.display    = '';
+  document.getElementById('box-register').style.display = 'none';
+  document.getElementById('box-reset').style.display    = 'none';
+}
+function showRegister() {
+  document.getElementById('box-login').style.display    = 'none';
+  document.getElementById('box-register').style.display = '';
+  document.getElementById('box-reset').style.display    = 'none';
+}
+function showReset() {
+  document.getElementById('box-login').style.display    = 'none';
+  document.getElementById('box-register').style.display = 'none';
+  document.getElementById('box-reset').style.display    = '';
+}
+
+// ── Login ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  if (!email || !pass) { showErr(errEl, 'Completa todos los campos'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+  try {
+    const resp = await fetch(`${API}/company/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showErr(errEl, data.error || 'Error al iniciar sesión'); return; }
+    await saveSessionAndLoad(data.token);
+  } catch(e) {
+    showErr(errEl, 'No se pudo conectar al servidor');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+}
+
+// ── Register ───────────────────────────────────────────────────────────────
+async function doRegister() {
+  const name      = document.getElementById('r-name').value.trim();
+  const slug      = document.getElementById('r-slug').value.trim();
+  const email     = document.getElementById('r-email').value.trim();
+  const pass      = document.getElementById('r-pass').value;
+  const website   = document.getElementById('r-website').value.trim();
+  const instagram = document.getElementById('r-instagram').value.trim();
+  const facebook  = document.getElementById('r-facebook').value.trim();
+  const tiktok    = document.getElementById('r-tiktok').value.trim();
+  const logoFile  = document.getElementById('r-logo-input').files[0];
+  const errEl     = document.getElementById('register-error');
+  errEl.style.display = 'none';
+
+  if (!name || !slug || !email || !pass) { showErr(errEl, 'Completa los campos obligatorios'); return; }
+  if (pass.length < 8) { showErr(errEl, 'La contraseña debe tener al menos 8 caracteres'); return; }
+
+  const btn = document.getElementById('btn-register');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+  try {
+    const fd = new FormData();
+    fd.append('name', name); fd.append('slug', slug);
+    fd.append('email', email); fd.append('password', pass);
+    if (website)   fd.append('website', website);
+    if (instagram) fd.append('instagram', instagram);
+    if (facebook)  fd.append('facebook', facebook);
+    if (tiktok)    fd.append('tiktok', tiktok);
+    if (logoFile)  fd.append('logo', logoFile);
+
+    const resp = await fetch(`${API}/company/register`, { method: 'POST', body: fd });
+    const data = await resp.json();
+    if (!resp.ok) { showErr(errEl, data.error || 'Error al registrarse'); return; }
+    await saveSessionAndLoad(data.token);
+  } catch(e) {
+    showErr(errEl, 'No se pudo conectar al servidor');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Registrar mi empresa';
+  }
+}
+
+async function doReset() {
+  const email = document.getElementById('reset-email').value.trim();
+  const pass  = document.getElementById('reset-pass').value;
+  const pass2 = document.getElementById('reset-pass2').value;
+  const errEl = document.getElementById('reset-error');
+  const okEl  = document.getElementById('reset-success');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  if (!email || !pass || !pass2) { showErr(errEl, 'Completa todos los campos'); return; }
+  if (pass !== pass2)            { showErr(errEl, 'Las contraseñas no coinciden'); return; }
+  if (pass.length < 8)           { showErr(errEl, 'Mínimo 8 caracteres'); return; }
+
+  const btn = document.getElementById('btn-reset');
+  btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+  try {
+    const resp = await fetch(`${API}/company/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, new_password: pass })
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showErr(errEl, data.error || 'Error al cambiar contraseña'); return; }
+    okEl.textContent = '✓ Contraseña actualizada. Ya puedes iniciar sesión.';
+    okEl.style.display = 'block';
+    document.getElementById('reset-email').value = '';
+    document.getElementById('reset-pass').value  = '';
+    document.getElementById('reset-pass2').value = '';
+    setTimeout(() => showLogin(), 2000);
+  } catch(e) {
+    showErr(errEl, 'No se pudo conectar al servidor');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Guardar contraseña';
+  }
+}
+
+async function saveSessionAndLoad(token) {
+  companyToken = token;
+  localStorage.setItem('company_token', token);
+  localStorage.setItem('company_registered', '1');
+  try {
+    const resp = await fetch(`${API}/company/me`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (resp.ok) {
+      const d = await resp.json();
+      companyData = d.company;
+    } else {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      companyData = { id: payload.company_id, slug: '', name: 'Mi empresa' };
+    }
+  } catch(e) {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    companyData = { id: payload.company_id, slug: '', name: 'Mi empresa' };
+  }
+  localStorage.setItem('company_data', JSON.stringify(companyData));
+  showDashboard();
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function showDashboard() {
+  document.getElementById('auth-wrap').style.display  = 'none';
+  document.getElementById('dashboard').style.display  = 'block';
+  document.getElementById('dash-company-name').textContent = companyData.name || 'Mi empresa';
+  document.getElementById('dash-company-slug').textContent = companyData.slug ? '@' + companyData.slug : '';
+  const storeUrl = `${location.origin}/tienda.html?slug=${companyData.slug}`;
+  document.getElementById('store-url-text').textContent = storeUrl;
+  loadGarments();
+}
+
+function viewStore() {
+  window.open(`tienda.html?slug=${companyData.slug}`, '_blank');
+}
+
+function doLogout() {
+  localStorage.removeItem('company_token');
+  localStorage.removeItem('company_data');
+  companyToken = null; companyData = null;
+  // Mostrar login (no registro) porque ya tiene cuenta
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('auth-wrap').style.display = '';
+  showLogin();
+}
+
+// ── Garments ───────────────────────────────────────────────────────────────
+async function loadGarments() {
+  try {
+    const resp = await fetch(`${API}/admin/garments`, {
+      headers: { 'Authorization': 'Bearer ' + companyToken }
+    });
+    if (resp.status === 401) { doLogout(); return; }
+    const data = await resp.json();
+    renderGarments(data.garments || []);
+  } catch(e) {
+    document.getElementById('garment-grid').innerHTML =
+      `<div class="empty-grid" style="color:var(--red)">No se pudo conectar al servidor</div>`;
+  }
+}
+
+function renderGarments(garments) {
+  const grid = document.getElementById('garment-grid');
+  document.getElementById('count-pill').textContent = garments.length;
+  if (!garments.length) {
+    grid.innerHTML = `<div class="empty-grid">Aún no tienes prendas.<br>¡Agrega la primera!</div>`;
+    return;
+  }
+  grid.innerHTML = garments.map(g => `
+    <div class="g-card ${g.hidden ? 'hidden-card' : ''}">
+      <img src="${escH(g.image)}" alt="${escH(g.name)}"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22170%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23f2f0ec%22/></svg>'">
+      <div class="g-info">
+        ${g.hidden ? '<span class="hidden-badge">Oculta</span>' : ''}
+        <div class="g-brand">${escH(g.brand)}</div>
+        <div class="g-name" title="${escH(g.name)}">${escH(g.name)}</div>
+        ${Array.isArray(g.sizes) && g.sizes.length ? `<div class="g-sizes">${g.sizes.map(s => `<span class="g-size-chip">${s}</span>`).join('')}</div>` : ''}
+        <div class="g-meta">
+          <span class="g-price">${g.price > 0 ? '$' + Number(g.price).toLocaleString('es-MX') : 'Sin precio'}</span>
+          <span class="g-cat">${CAT_LABELS[g.category] || g.category}</span>
+        </div>
+        <button class="btn-edit" onclick="openEditModal(${JSON.stringify(g).replace(/"/g,'&quot;')})">Editar</button>
+        <button class="btn-hide" onclick="toggleHide('${g.id}', ${g.hidden})">${g.hidden ? 'Mostrar' : 'Ocultar'}</button>
+        <button class="btn-del" onclick="deleteGarment('${g.id}','${escH(g.name).replace(/'/g,"\\'")}')">Eliminar</button>
+      </div>
+    </div>`).join('');
+}
+
+async function addGarment() {
+  const imgFile = document.getElementById('img-input').files[0];
+  const brand   = document.getElementById('f-brand').value.trim();
+  const name    = document.getElementById('f-name').value.trim();
+  const price   = document.getElementById('f-price').value.trim();
+  const cat     = document.getElementById('f-category').value;
+  const fashn   = document.getElementById('f-fashn').value;
+  const desc    = document.getElementById('f-desc').value.trim();
+
+  if (!imgFile) return toast('Selecciona una imagen', true);
+  if (!brand)   return toast('Escribe la marca', true);
+  if (!name)    return toast('Escribe el nombre', true);
+  if (!cat)     return toast('Selecciona una categoría', true);
+
+  const btn = document.getElementById('btn-add');
+  btn.disabled = true;
+  document.getElementById('btn-add-label').style.display = 'none';
+  btn.innerHTML += '<div class="spinner"></div>';
+
+  try {
+    const fd = new FormData();
+    const sizes = document.getElementById('f-sizes').value || '[]';
+    fd.append('image', imgFile); fd.append('brand', brand);
+    fd.append('name', name); fd.append('price', price || '0');
+    fd.append('category', cat); fd.append('fashn_category', fashn);
+    fd.append('description', desc); fd.append('sizes', sizes);
+
+    const resp = await fetch(`${API}/admin/garments`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + companyToken },
+      body: fd
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
+    toast('✓ Prenda agregada');
+    resetForm();
+    loadGarments();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span id="btn-add-label">Agregar al catálogo</span>';
+  }
+}
+
+// ── Toggle hidden ──────────────────────────────────────────────────────────
+async function toggleHide(id, currentHidden) {
+  try {
+    const resp = await fetch(`${API}/admin/garments/${id}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + companyToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hidden: !currentHidden })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    toast(currentHidden ? '✓ Prenda visible' : '✓ Prenda ocultada');
+    loadGarments();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── Edit modal ─────────────────────────────────────────────────────────────
+function openEditModal(g) {
+  document.getElementById('edit-id').value       = g.id;
+  document.getElementById('edit-brand').value    = g.brand || '';
+  document.getElementById('edit-name').value     = g.name || '';
+  document.getElementById('edit-price').value    = g.price || 0;
+  document.getElementById('edit-category').value = g.category || '';
+  document.getElementById('edit-fashn').value    = g.fashn_category || 'tops';
+  document.getElementById('edit-desc').value     = g.description || '';
+  const sizes = Array.isArray(g.sizes) ? g.sizes : [];
+  document.getElementById('edit-sizes').value = JSON.stringify(sizes);
+  renderEditSizeChips(g.fashn_category || 'tops', sizes);
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+function syncEditFashn() {
+  const cat = document.getElementById('edit-category').value;
+  if (FASHN_MAP[cat]) document.getElementById('edit-fashn').value = FASHN_MAP[cat];
+  renderEditSizeChips(FASHN_MAP[cat] || 'tops', JSON.parse(document.getElementById('edit-sizes').value || '[]'));
+}
+
+function renderEditSizeChips(fashnCat, selected) {
+  const options = SIZES_MAP[fashnCat] || [];
+  const field = document.getElementById('edit-sizes-field');
+  field.style.display = options.length ? '' : 'none';
+  if (!options.length) return;
+  document.getElementById('edit-size-chips').innerHTML = options.map(s => `
+    <span class="size-chip ${selected.includes(s) ? 'active' : ''}"
+          onclick="toggleEditSize('${s}')">${s}</span>`).join('');
+}
+
+function toggleEditSize(size) {
+  const inp = document.getElementById('edit-sizes');
+  let sel = JSON.parse(inp.value || '[]');
+  sel = sel.includes(size) ? sel.filter(s => s !== size) : [...sel, size];
+  inp.value = JSON.stringify(sel);
+  document.querySelectorAll('#edit-size-chips .size-chip').forEach(c => {
+    c.classList.toggle('active', sel.includes(c.textContent.trim()));
+  });
+}
+
+function addEditCustomSize() {
+  const input = document.getElementById('edit-custom-size');
+  const val = input.value.trim().toUpperCase();
+  if (!val) return;
+  const inp = document.getElementById('edit-sizes');
+  let sel = JSON.parse(inp.value || '[]');
+  if (sel.includes(val)) { input.value = ''; return; }
+  sel.push(val);
+  inp.value = JSON.stringify(sel);
+  input.value = '';
+  const wrap = document.getElementById('edit-size-chips');
+  const chip = document.createElement('span');
+  chip.className = 'size-chip active';
+  chip.textContent = val;
+  chip.onclick = () => toggleEditSize(val);
+  wrap.appendChild(chip);
+}
+
+async function saveEdit() {
+  const id    = document.getElementById('edit-id').value;
+  const brand = document.getElementById('edit-brand').value.trim();
+  const name  = document.getElementById('edit-name').value.trim();
+  const price = document.getElementById('edit-price').value;
+  const cat   = document.getElementById('edit-category').value;
+  const fashn = document.getElementById('edit-fashn').value;
+  const desc  = document.getElementById('edit-desc').value.trim();
+  const sizes = JSON.parse(document.getElementById('edit-sizes').value || '[]');
+
+  if (!brand || !name || !cat) return toast('Marca, nombre y categoría son requeridos', true);
+
+  const btn = document.getElementById('btn-save-edit');
+  btn.disabled = true; btn.textContent = 'Guardando…';
+  try {
+    const resp = await fetch(`${API}/admin/garments/${id}`, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + companyToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brand, name, price: parseInt(price)||0, category: cat, fashn_category: fashn, description: desc, sizes })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    toast('✓ Prenda actualizada');
+    closeEditModal();
+    loadGarments();
+  } catch(e) { toast(e.message, true); }
+  finally { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+}
+
+async function deleteGarment(id, name) {
+  if (!confirm(`¿Eliminar "${name}"?`)) return;
+  try {
+    const resp = await fetch(`${API}/admin/garments/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + companyToken }
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    toast('Prenda eliminada');
+    loadGarments();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── Form helpers ───────────────────────────────────────────────────────────
+document.getElementById('img-input').addEventListener('change', function() {
+  const file = this.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('img-preview');
+    const drop = document.getElementById('img-drop');
+    prev.src = e.target.result; prev.style.display = 'block';
+    drop.querySelector('.ph').style.display = 'none';
+    drop.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+});
+
+const SIZES_MAP = {
+  tops:       ['XS','S','M','L','XL','XXL'],
+  bottoms:    ['28','30','32','34','36','38','40'],
+  'one-pieces':['XS','S','M','L','XL','XXL'],
+  accessory:  [],
+};
+
+function syncFashn() {
+  const cat = document.getElementById('f-category').value;
+  if (FASHN_MAP[cat]) document.getElementById('f-fashn').value = FASHN_MAP[cat];
+  renderSizeChips(FASHN_MAP[cat] || 'tops');
+}
+
+function renderSizeChips(fashnCat) {
+  const options = SIZES_MAP[fashnCat] || [];
+  const wrap = document.getElementById('size-chips');
+  document.getElementById('sizes-field').style.display = options.length ? '' : 'none';
+  if (!options.length) { document.getElementById('f-sizes').value = '[]'; return; }
+  const selected = JSON.parse(document.getElementById('f-sizes').value || '[]');
+  wrap.innerHTML = options.map(s => `
+    <span class="size-chip ${selected.includes(s) ? 'active' : ''}"
+          onclick="toggleSize('${s}')">${s}</span>`).join('');
+}
+
+function addCustomSize() {
+  const input = document.getElementById('f-custom-size');
+  const val = input.value.trim().toUpperCase();
+  if (!val) return;
+  const inp = document.getElementById('f-sizes');
+  let selected = JSON.parse(inp.value || '[]');
+  if (selected.includes(val)) { input.value = ''; return; }
+  selected.push(val);
+  inp.value = JSON.stringify(selected);
+  input.value = '';
+  // Add chip dynamically
+  const wrap = document.getElementById('size-chips');
+  const chip = document.createElement('span');
+  chip.className = 'size-chip active';
+  chip.textContent = val;
+  chip.onclick = () => toggleSize(val);
+  wrap.appendChild(chip);
+}
+
+function toggleSize(size) {
+  const inp = document.getElementById('f-sizes');
+  let selected = JSON.parse(inp.value || '[]');
+  selected = selected.includes(size) ? selected.filter(s => s !== size) : [...selected, size];
+  inp.value = JSON.stringify(selected);
+  // refresh chips
+  document.querySelectorAll('#size-chips .size-chip').forEach(chip => {
+    chip.classList.toggle('active', selected.includes(chip.textContent.trim()));
+  });
+}
+
+function sanitizeSlug(input) {
+  input.value = input.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+  const slug = input.value;
+  document.getElementById('slug-preview').textContent =
+    slug ? `Tu tienda: ${location.origin}/tienda.html?slug=${slug}` : 'Tu tienda: balam.io/tienda?slug=…';
+}
+
+function resetForm() {
+  ['f-brand','f-name','f-price','f-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-fashn').value = 'tops';
+  document.getElementById('f-sizes').value = '[]';
+  document.getElementById('size-chips').innerHTML = '';
+  document.getElementById('f-custom-size').value = '';
+  document.getElementById('sizes-field').style.display = 'none';
+  document.getElementById('img-input').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-drop').querySelector('.ph').style.display = 'flex';
+  document.getElementById('img-drop').classList.remove('has-img');
+}
+
+// ── Toast & utils ──────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+
+function escH(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

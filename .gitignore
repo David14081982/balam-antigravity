@@ -1,0 +1,12 @@
+node_modules/
+doji-pwa/backend/node_modules/
+doji-pwa/backend/uploads/
+doji-pwa/backend/results/
+doji-pwa/backend/catalog/
+doji-pwa/backend/balam.db
+doji-pwa/backend/*.db-journal
+doji-pwa/backend/*.db-shm
+doji-pwa/backend/*.db-wal
+doji-pwa.zip
+repomix-output.xml
+.claude/

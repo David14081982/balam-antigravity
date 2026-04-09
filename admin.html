@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balam — Administrador</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #1a1a18;
+      --bg:     #fafaf8;
+      --bg2:    #f2f0ec;
+      --bg3:    #e8e5df;
+      --red:    #c0392b;
+      --green:  #27ae60;
+      --gold:   #c8a96e;
+      --serif:  'Georgia', serif;
+      --sans:   -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --radius: 12px;
+    }
+
+    body { font-family: var(--sans); background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+    /* ── Login overlay ─────────────────────────────────────────────────────── */
+    #login-overlay {
+      position: fixed; inset: 0; background: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .login-box {
+      background: #fff; border-radius: 16px; padding: 40px 36px;
+      width: 100%; max-width: 360px; text-align: center;
+    }
+    .login-box h1 {
+      font-family: var(--serif); font-size: 26px; font-weight: normal;
+      letter-spacing: 0.04em; margin-bottom: 6px;
+    }
+    .login-box p { font-size: 13px; color: #999; margin-bottom: 28px; }
+    .login-box input {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--bg3);
+      border-radius: 8px; font-size: 15px; outline: none; margin-bottom: 14px;
+      transition: border-color 0.15s;
+    }
+    .login-box input:focus { border-color: var(--ink); }
+    .login-error { font-size: 13px; color: var(--red); margin-bottom: 10px; min-height: 18px; }
+
+    /* ── App shell ─────────────────────────────────────────────────────────── */
+    #app-shell { display: none; }
+
+    header {
+      background: var(--ink); color: #fff; padding: 20px 32px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    header h1 { font-family: var(--serif); font-size: 22px; font-weight: normal; letter-spacing: 0.05em; }
+    header span { opacity: 0.5; font-size: 13px; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    .header-right a { color: #fff; opacity: 0.6; font-size: 13px; text-decoration: none; }
+    .btn-logout {
+      background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+      font-family: var(--sans); transition: background 0.15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.18); }
+
+    /* ── Tab bar ───────────────────────────────────────────────────────────── */
+    .tab-bar {
+      background: #fff; border-bottom: 1px solid var(--bg3);
+      display: flex; gap: 0; padding: 0 32px;
+    }
+    .tab-btn {
+      padding: 14px 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+      text-transform: uppercase; cursor: pointer; border: none; background: none;
+      color: #aaa; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s; font-family: var(--sans);
+    }
+    .tab-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
+    .tab-btn:hover:not(.active) { color: var(--ink); }
+
+    /* ── Shared layout ─────────────────────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 32px; align-items: start; }
+    @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } }
+
+    /* ── Card & form ───────────────────────────────────────────────────────── */
+    .card { background: #fff; border: 1px solid var(--bg3); border-radius: var(--radius); padding: 28px; }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 20px; letter-spacing: 0.03em; text-transform: uppercase; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: #888; margin-bottom: 6px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--bg3);
+      border-radius: 8px; font-size: 14px; font-family: var(--sans);
+      background: var(--bg); color: var(--ink); transition: border-color 0.15s; outline: none;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--ink); }
+    .field textarea { resize: vertical; min-height: 70px; }
+
+    .img-drop {
+      border: 2px dashed var(--bg3); border-radius: 10px; height: 200px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+      position: relative; overflow: hidden; background: var(--bg);
+    }
+    .img-drop:hover { border-color: var(--ink); background: var(--bg2); }
+    .img-drop.has-img { border-style: solid; border-color: var(--bg3); }
+    .img-drop img { width: 100%; height: 100%; object-fit: contain; }
+    .img-drop .placeholder { text-align: center; pointer-events: none; }
+    .img-drop .placeholder svg { opacity: 0.3; margin-bottom: 8px; }
+    .img-drop .placeholder p { font-size: 13px; color: #999; }
+    .img-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+    /* ── Buttons ───────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer;
+      font-size: 14px; font-weight: 600; font-family: var(--sans);
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--ink); color: #fff; width: 100%; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-danger  { background: #fff0ee; color: var(--red); border: 1.5px solid #ffd5d0; padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-danger:hover  { background: #ffe0db; }
+    .btn-success { background: #edfbf3; color: var(--green); border: 1.5px solid #b8f0cf; padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-success:hover { background: #d5f7e4; }
+    .btn-warn   { background: #fff8ec; color: #b07d1a; border: 1.5px solid #f0d9a0; padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+    .btn-warn:hover { background: #fdf0ce; }
+
+    /* ── Garment list ──────────────────────────────────────────────────────── */
+    #garment-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+
+    .garment-card { background: #fff; border: 1px solid var(--bg3); border-radius: var(--radius); overflow: hidden; transition: box-shadow 0.2s; }
+    .garment-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .garment-card img { width: 100%; height: 180px; object-fit: cover; background: var(--bg2); display: block; }
+    .garment-info { padding: 12px; }
+    .garment-brand { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 2px; }
+    .garment-name  { font-size: 13px; font-weight: 600; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .garment-meta  { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .garment-price { font-size: 13px; font-weight: 700; }
+    .garment-cat   { font-size: 10px; background: var(--bg2); padding: 2px 7px; border-radius: 20px; color: #777; }
+
+    /* ── Showcase grid ─────────────────────────────────────────────────────── */
+    .showcase-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px;
+    }
+    .showcase-zone {
+      background: #fff; border: 1px solid var(--bg3); border-radius: var(--radius); overflow: hidden;
+    }
+    .showcase-zone-header {
+      padding: 14px 16px; border-bottom: 1px solid var(--bg3);
+      font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #888;
+    }
+    .showcase-zone-body { padding: 16px; }
+    .showcase-preview {
+      width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px;
+      background: var(--bg2); display: block; margin-bottom: 12px;
+    }
+    .showcase-preview.is-face {
+      width: 80px; height: 80px; border-radius: 50%; aspect-ratio: unset; margin: 0 auto 12px;
+    }
+    .showcase-placeholder {
+      width: 100%; aspect-ratio: 3/4; background: var(--bg2); border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #bbb; font-size: 13px; margin-bottom: 12px; flex-direction: column; gap: 8px;
+    }
+    .showcase-placeholder.is-face {
+      width: 80px; height: 80px; border-radius: 50%; aspect-ratio: unset; margin: 0 auto 12px;
+    }
+    .showcase-actions { display: flex; gap: 8px; }
+    .showcase-actions label {
+      flex: 1; background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 12px;
+      font-size: 12px; font-weight: 600; text-align: center; cursor: pointer;
+      font-family: var(--sans); transition: opacity 0.15s;
+    }
+    .showcase-actions label:hover { opacity: 0.85; }
+    .showcase-actions input[type=file] { display: none; }
+    .btn-delete-showcase {
+      background: #fff0ee; color: var(--red); border: 1.5px solid #ffd5d0;
+      padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; font-family: var(--sans); white-space: nowrap; transition: background 0.15s;
+    }
+    .btn-delete-showcase:hover { background: #ffe0db; }
+
+    /* ── Companies table ───────────────────────────────────────────────────── */
+    .companies-table-wrap { background: #fff; border: 1px solid var(--bg3); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--bg2); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #888; padding: 12px 16px; text-align: left; }
+    td { padding: 14px 16px; font-size: 13px; border-top: 1px solid var(--bg3); vertical-align: middle; }
+    tr:hover td { background: var(--bg); }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .status-badge.active    { background: #edfbf3; color: var(--green); }
+    .status-badge.pending   { background: #fff8ec; color: #b07d1a; }
+    .status-badge.suspended { background: #fff0ee; color: var(--red); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    /* ── Section header ────────────────────────────────────────────────────── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .section-header h2 { font-size: 15px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; }
+    .count-badge { background: var(--bg3); padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #bbb; font-size: 14px; }
+    .empty-state svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+    .empty-table { text-align: center; padding: 48px 20px; color: #bbb; font-size: 14px; }
+
+    /* ── Spinner ───────────────────────────────────────────────────────────── */
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    .btn-primary.loading .spinner { display: block; }
+    .btn-primary.loading .btn-label { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ─────────────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--ink); color: #fff; padding: 12px 22px;
+      border-radius: 40px; font-size: 14px; font-weight: 500;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 999; white-space: nowrap; pointer-events: none;
+    }
+    .toast.show  { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN OVERLAY ══════════════════════════════════════════════════════════ -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h1>Balam Admin</h1>
+    <p>Acceso restringido — ingresa la contraseña</p>
+    <div class="login-error" id="login-error"></div>
+    <input type="password" id="login-pass" placeholder="Contraseña"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn btn-primary" onclick="doLogin()">
+      <div class="spinner" id="login-spinner"></div>
+      <span class="btn-label" id="login-label">Entrar</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ APP SHELL ══════════════════════════════════════════════════════════════ -->
+<div id="app-shell">
+
+  <header>
+    <div>
+      <h1>BALAM &mdash; Administrador</h1>
+      <span>Panel de control</span>
+    </div>
+    <div class="header-right">
+      <a href="doji-pwa/frontend/index.html">← Volver al app</a>
+      <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <!-- Tab bar -->
+    <button class="tab-btn active" id="tab-btn-catalogo" onclick="switchTab('catalogo')">Catálogo</button>
+    <button class="tab-btn" id="tab-btn-empresas" onclick="switchTab('empresas')">Empresas</button>
+    <button class="tab-btn" id="tab-btn-apariencia" onclick="switchTab('apariencia')">Apariencia</button>
+    <button class="tab-btn" id="tab-btn-ia" onclick="switchTab('ia')">Ajustes de IA</button>
+  </div>
+
+  <!-- ══ TAB: AJUSTES DE IA ══════════════════════════════════════════════════ -->
+  <div id="tab-ia" style="display:none">
+    <div class="container">
+      <div class="card" style="max-width: 500px; margin: 0 auto;">
+        <h2>Global IA Settings</h2>
+        <div class="field">
+          <label>Límite base diario (imágenes/24h)</label>
+          <input type="number" id="base-limit-input" value="3" min="1">
+          <p style="font-size:11px;color:#888;margin-top:4px;">Usuarios nuevos o sin referidos comienzan con esto.</p>
+        </div>
+        <div class="field">
+          <label>Recompensa por referido (imágenes extra)</label>
+          <input type="number" id="referral-reward-input" value="1" min="0">
+          <p style="font-size:11px;color:#888;margin-top:4px;">Generaciones adicionales por cada amigo que se registre con su código.</p>
+        </div>
+        <div class="field">
+          <label>Límite máximo diario permitido</label>
+          <input type="number" id="max-limit-input" value="50" min="1">
+          <p style="font-size:11px;color:#888;margin-top:4px;">Cap máximo que un usuario puede alcanzar invitando amigos.</p>
+        </div>
+        <button class="btn btn-primary" onclick="saveIASettings()">
+          <span class="btn-label">Guardar Cambios</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: CATÁLOGO ══════════════════════════════════════════════════════ -->
+  <div id="tab-catalogo">
+    <div class="container">
+      <div class="grid">
+
+        <!-- Add garment form -->
+        <div class="card">
+          <h2>Agregar Prenda</h2>
+
+          <div class="field">
+            <label>Foto de la prenda *</label>
+            <div class="img-drop" id="img-drop">
+              <div class="placeholder">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <p>Clic para seleccionar<br><strong>JPG, PNG o WEBP</strong></p>
+                <p style="font-size:11px;margin-top:4px;color:#bbb;">Fondo blanco recomendado</p>
+              </div>
+              <img id="img-preview" style="display:none" alt="preview">
+              <input type="file" id="img-input" accept="image/jpeg,image/png,image/webp">
+            </div>
+          </div>
+
+          <div class="field"><label>Marca *</label><input type="text" id="f-brand" placeholder="Ej: Loewe, Zara, H&M…"></div>
+          <div class="field"><label>Nombre de la prenda *</label><input type="text" id="f-name" placeholder="Ej: Camisa Oxford Blanca"></div>
+          <div class="field"><label>Precio (MXN)</label><input type="number" id="f-price" placeholder="0" min="0"></div>
+
+          <div class="field">
+            <label>Categoría *</label>
+            <select id="f-category" onchange="syncFashnCategory()">
+              <option value="">— Selecciona —</option>
+              <option value="linen-shirt">Camisa de lino / Camisa</option>
+              <option value="guayabera">Guayabera</option>
+              <option value="tshirt-premium">T-Shirt</option>
+              <option value="polo">Polo</option>
+              <option value="pants">Pantalón</option>
+              <option value="shorts">Shorts</option>
+              <option value="jeans">Jeans</option>
+              <option value="dress">Vestido</option>
+              <option value="jumpsuit">Jumpsuit / Enterizo</option>
+              <option value="hat">Sombrero / Gorra</option>
+              <option value="collar">Collar / Accesorio</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Categoría Fashn.ai *</label>
+            <select id="f-fashn-category">
+              <option value="tops">tops — Parte superior (camisas, polos, t-shirts)</option>
+              <option value="bottoms">bottoms — Parte inferior (pantalones, shorts)</option>
+              <option value="one-pieces">one-pieces — Pieza entera (vestidos, jumpsuits)</option>
+              <option value="accessory">accessory — Accesorio (sombrero, collar) — sin IA</option>
+            </select>
+          </div>
+
+          <div class="field"><label>Descripción (opcional)</label><textarea id="f-desc" placeholder="Breve descripción de la prenda…"></textarea></div>
+
+          <button class="btn btn-primary" id="btn-add" onclick="addGarment()">
+            <div class="spinner"></div>
+            <span class="btn-label">Agregar al catálogo</span>
+          </button>
+        </div>
+
+        <!-- Garment list -->
+        <div>
+          <div class="section-header">
+            <h2>Prendas</h2>
+            <span class="count-badge" id="count-badge">0</span>
+          </div>
+          <div id="garment-list">
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>
+              Aún no hay prendas.<br>¡Agrega la primera!
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: EMPRESAS ══════════════════════════════════════════════════════ -->
+  <div id="tab-empresas" style="display:none">
+    <div class="container">
+      <div class="section-header">
+        <h2>Empresas registradas</h2>
+        <span class="count-badge" id="companies-count">0</span>
+      </div>
+      <div class="companies-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Slug</th>
+              <th>Email</th>
+              <th>Registro</th>
+              <th>Status</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="companies-tbody">
+            <tr><td colspan="6" class="empty-table">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: APARIENCIA ═══════════════════════════════════════════════════ -->
+  <div id="tab-apariencia" style="display:none">
+    <div class="container">
+      <div class="section-header">
+        <h2>Imágenes de la pantalla "Crea tu apariencia"</h2>
+      </div>
+      <p style="font-size:13px;color:#888;margin-bottom:24px;margin-top:-8px;">
+        Estas imágenes aparecen en la pantalla de bienvenida del probador virtual. Sube fotos de personas con prendas representativas de tu catálogo.
+      </p>
+      <div class="showcase-grid" id="showcase-grid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </div>
+
+</div><!-- #app-shell -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API   = 'http://localhost:3001/api';
+const ADMIN = 'http://localhost:3001/api/admin';
+
+// ── Auth helpers ───────────────────────────────────────────────────────────
+function getToken() { return localStorage.getItem('admin_token'); }
+function authHeaders() { return { 'Authorization': 'Bearer ' + getToken() }; }
+
+// ── Login ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const pass = document.getElementById('login-pass').value;
+  if (!pass) return;
+
+  document.getElementById('login-spinner').style.display = 'block';
+  document.getElementById('login-label').style.display  = 'none';
+  document.getElementById('login-error').textContent    = '';
+
+  try {
+    const resp = await fetch(`${ADMIN}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pass })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Error al iniciar sesión');
+    localStorage.setItem('admin_token', data.token);
+    showApp();
+  } catch (e) {
+    document.getElementById('login-error').textContent = e.message;
+  } finally {
+    document.getElementById('login-spinner').style.display = 'none';
+    document.getElementById('login-label').style.display  = '';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('admin_token');
+  location.reload();
+}
+
+function showApp() {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'block';
+  loadGarments();
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  ['catalogo','empresas','apariencia','ia'].forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    const btn = document.getElementById('tab-btn-' + t);
+    if (el) el.style.display = name === t ? '' : 'none';
+    if (btn) btn.classList.toggle('active', name === t);
+  });
+  if (name === 'empresas')   loadCompanies();
+  if (name === 'apariencia') loadShowcase();
+  if (name === 'ia')         loadIASettings();
+}
+
+async function loadIASettings() {
+  try {
+    const resp = await fetch(`${ADMIN}/settings`, { headers: authHeaders() });
+    const settings = await resp.json();
+    if (!resp.ok) throw new Error(settings.error);
+    
+    const base = settings.find(s => s.key === 'base_daily_limit');
+    if (base) document.getElementById('base-limit-input').value = base.value.limit;
+    
+    const reward = settings.find(s => s.key === 'referral_reward');
+    if (reward) document.getElementById('referral-reward-input').value = reward.value.reward;
+
+    const max = settings.find(s => s.key === 'max_daily_limit');
+    if (max) document.getElementById('max-limit-input').value = max.value.limit;
+  } catch(e) { toast(e.message, true); }
+}
+
+async function saveIASettings() {
+  const baseLimit = parseInt(document.getElementById('base-limit-input').value);
+  const referralReward = parseInt(document.getElementById('referral-reward-input').value);
+  const maxLimit = parseInt(document.getElementById('max-limit-input').value);
+  
+  try {
+    // 1. Save base limit
+    await fetch(`${ADMIN}/settings`, {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'base_daily_limit', value: { limit: baseLimit } })
+    });
+    // 2. Save reward
+    await fetch(`${ADMIN}/settings`, {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'referral_reward', value: { reward: referralReward } })
+    });
+    // 3. Save max limit
+    await fetch(`${ADMIN}/settings`, {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'max_daily_limit', value: { limit: maxLimit } })
+    });
+    toast('✓ Ajustes guardados correctamente');
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── Category helpers ───────────────────────────────────────────────────────
+const CATEGORY_LABELS = {
+  'linen-shirt': 'Camisa', 'guayabera': 'Guayabera', 'tshirt-premium': 'T-Shirt',
+  'polo': 'Polo', 'pants': 'Pantalón', 'shorts': 'Shorts', 'jeans': 'Jeans',
+  'dress': 'Vestido', 'jumpsuit': 'Jumpsuit', 'hat': 'Sombrero', 'collar': 'Collar',
+};
+
+function syncFashnCategory() {
+  const map = {
+    'linen-shirt': 'tops', 'guayabera': 'tops', 'tshirt-premium': 'tops', 'polo': 'tops',
+    'pants': 'bottoms', 'shorts': 'bottoms', 'jeans': 'bottoms',
+    'dress': 'one-pieces', 'jumpsuit': 'one-pieces', 'hat': 'accessory', 'collar': 'accessory',
+  };
+  const cat = document.getElementById('f-category').value;
+  if (map[cat]) document.getElementById('f-fashn-category').value = map[cat];
+}
+
+// ── Image preview ──────────────────────────────────────────────────────────
+document.getElementById('img-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const preview = document.getElementById('img-preview');
+    const drop    = document.getElementById('img-drop');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    drop.querySelector('.placeholder').style.display = 'none';
+    drop.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+});
+
+// ── Add garment ────────────────────────────────────────────────────────────
+async function addGarment() {
+  const imgFile       = document.getElementById('img-input').files[0];
+  const brand         = document.getElementById('f-brand').value.trim();
+  const name          = document.getElementById('f-name').value.trim();
+  const price         = document.getElementById('f-price').value.trim();
+  const category      = document.getElementById('f-category').value;
+  const fashnCategory = document.getElementById('f-fashn-category').value;
+  const desc          = document.getElementById('f-desc').value.trim();
+
+  if (!imgFile)  return toast('Selecciona una imagen', true);
+  if (!brand)    return toast('Escribe la marca', true);
+  if (!name)     return toast('Escribe el nombre de la prenda', true);
+  if (!category) return toast('Selecciona una categoría', true);
+
+  const btn = document.getElementById('btn-add');
+  btn.disabled = true; btn.classList.add('loading');
+
+  try {
+    const fd = new FormData();
+    fd.append('image', imgFile);
+    fd.append('brand', brand); fd.append('name', name);
+    fd.append('price', price || '0'); fd.append('category', category);
+    fd.append('fashn_category', fashnCategory); fd.append('description', desc);
+
+    const resp = await fetch(`${ADMIN}/garments`, {
+      method: 'POST', headers: authHeaders(), body: fd
+    });
+    const text = await resp.text();
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error(`Respuesta inesperada: ${text.slice(0,120)}`); }
+    if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
+
+    toast('✓ Prenda agregada al catálogo');
+    resetForm();
+    loadGarments();
+  } catch(e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false; btn.classList.remove('loading');
+  }
+}
+
+// ── Delete garment ─────────────────────────────────────────────────────────
+async function deleteGarment(id, name) {
+  if (!confirm(`¿Eliminar "${name}" del catálogo?`)) return;
+  try {
+    const resp = await fetch(`${ADMIN}/garments/${id}`, {
+      method: 'DELETE', headers: authHeaders()
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    toast('Prenda eliminada');
+    loadGarments();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── Load garments ──────────────────────────────────────────────────────────
+async function loadGarments() {
+  try {
+    const resp = await fetch(`${ADMIN}/garments`, { headers: authHeaders() });
+    if (resp.status === 401 || resp.status === 403) { doLogout(); return; }
+    const data = await resp.json();
+    renderGarments(data.garments || []);
+  } catch(e) {
+    document.getElementById('garment-list').innerHTML =
+      `<div class="empty-state" style="color:#c0392b">No se pudo conectar al backend.<br>¿Está corriendo node server.js?</div>`;
+  }
+}
+
+function renderGarments(garments) {
+  const list = document.getElementById('garment-list');
+  document.getElementById('count-badge').textContent = garments.length;
+  if (!garments.length) {
+    list.innerHTML = `<div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>
+      Aún no hay prendas.<br>¡Agrega la primera!</div>`;
+    return;
+  }
+  list.innerHTML = garments.map(g => `
+    <div class="garment-card">
+      <img src="${g.image}" alt="${g.name}"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22180%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23f2f0ec%22/></svg>'">
+      <div class="garment-info">
+        <div class="garment-brand">${g.brand}</div>
+        <div class="garment-name" title="${g.name}">${g.name}</div>
+        <div class="garment-meta">
+          <span class="garment-price">${g.price > 0 ? '$' + g.price.toLocaleString() : 'Sin precio'}</span>
+          <span class="garment-cat">${CATEGORY_LABELS[g.category] || g.category}</span>
+        </div>
+        <button class="btn btn-danger" style="margin-top:10px;width:100%"
+                onclick="deleteGarment('${g.id}','${g.name.replace(/'/g,"\\'")}')">Eliminar</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── Reset form ─────────────────────────────────────────────────────────────
+function resetForm() {
+  ['f-brand','f-name','f-price','f-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-fashn-category').value = 'tops';
+  document.getElementById('img-input').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-drop').querySelector('.placeholder').style.display = 'flex';
+  document.getElementById('img-drop').classList.remove('has-img');
+}
+
+// ── Load companies ─────────────────────────────────────────────────────────
+async function loadCompanies() {
+  const tbody = document.getElementById('companies-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty-table">Cargando…</td></tr>';
+  try {
+    const resp = await fetch(`${ADMIN}/companies`, { headers: authHeaders() });
+    if (resp.status === 401 || resp.status === 403) { doLogout(); return; }
+    const data = await resp.json();
+    renderCompanies(data.companies || []);
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-table" style="color:var(--red)">Error al cargar empresas</td></tr>`;
+  }
+}
+
+function renderCompanies(companies) {
+  const tbody = document.getElementById('companies-tbody');
+  document.getElementById('companies-count').textContent = companies.length;
+
+  if (!companies.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-table">No hay empresas registradas aún.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = companies.map(c => {
+    const date = new Date(c.created_at).toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+    const badgeClass = c.status === 'active' ? 'active' : c.status === 'suspended' ? 'suspended' : 'pending';
+    const statusLabel = { active: 'Activa', pending: 'Pendiente', suspended: 'Suspendida' }[c.status] || c.status;
+
+    const approveBtn  = c.status !== 'active'    ? `<button class="btn btn-success" onclick="updateCompanyStatus('${c.id}','active')">Aprobar</button>` : '';
+    const suspendBtn  = c.status !== 'suspended' ? `<button class="btn btn-danger"  onclick="updateCompanyStatus('${c.id}','suspended')">Suspender</button>` : '';
+    const pendingBtn  = c.status !== 'pending'   ? `<button class="btn btn-warn"    onclick="updateCompanyStatus('${c.id}','pending')">Pendiente</button>` : '';
+
+    return `<tr>
+      <td><strong>${escHtml(c.name)}</strong></td>
+      <td><code style="font-size:12px;background:var(--bg2);padding:2px 6px;border-radius:4px;">${escHtml(c.slug)}</code></td>
+      <td style="color:#777">${escHtml(c.contact_email || '—')}</td>
+      <td style="color:#999;font-size:12px">${date}</td>
+      <td><span class="status-badge ${badgeClass}"><span class="status-dot"></span>${statusLabel}</span></td>
+      <td><div class="actions-cell">${approveBtn}${suspendBtn}${pendingBtn}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateCompanyStatus(id, status) {
+  try {
+    const resp = await fetch(`${ADMIN}/companies/${id}/status`, {
+      method: 'PATCH',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    const labels = { active: 'aprobada', suspended: 'suspendida', pending: 'marcada como pendiente' };
+    toast(`✓ Empresa ${labels[status] || status}`);
+    loadCompanies();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── Showcase ───────────────────────────────────────────────────────────────
+const SHOWCASE_SLOTS = [
+  { slot: 'main',  label: 'Imagen principal (centro)',  isFace: false },
+  { slot: 'left',  label: 'Imagen izquierda',           isFace: false },
+  { slot: 'right', label: 'Imagen derecha',             isFace: false },
+  { slot: 'face',  label: 'Foto de cara (círculo)',     isFace: true  },
+];
+
+async function loadShowcase() {
+  const grid = document.getElementById('showcase-grid');
+  grid.innerHTML = '<div style="color:#aaa;font-size:14px;padding:20px 0;">Cargando…</div>';
+  try {
+    const resp = await fetch(`${API}/config/showcase`);
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
+    // data = { main: url|null, left: url|null, right: url|null, face: url|null }
+    const map = {};
+    Object.entries(data).forEach(([slot, url]) => {
+      if (url) map[slot] = { slot, url };
+    });
+    renderShowcaseGrid(map);
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);font-size:14px;padding:20px 0;">Error: ${e.message}</div>`;
+  }
+}
+
+function renderShowcaseGrid(map) {
+  const grid = document.getElementById('showcase-grid');
+  grid.innerHTML = SHOWCASE_SLOTS.map(({ slot, label, isFace }) => {
+    const img = map[slot];
+    const faceClass = isFace ? ' is-face' : '';
+    const previewHtml = img
+      ? `<img class="showcase-preview${faceClass}" src="${escHtml(img.url)}" alt="${slot}">`
+      : `<div class="showcase-placeholder${faceClass}">
+           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+           Sin imagen
+         </div>`;
+    const deleteBtn = img
+      ? `<button class="btn-delete-showcase" onclick="deleteShowcase('${slot}')">Eliminar</button>`
+      : '';
+    return `
+      <div class="showcase-zone">
+        <div class="showcase-zone-header">${escHtml(label)}</div>
+        <div class="showcase-zone-body">
+          ${previewHtml}
+          <div class="showcase-actions">
+            <label>
+              <input type="file" accept="image/jpeg,image/png,image/webp"
+                     onchange="uploadShowcaseFile(this,'${slot}')">
+              ${img ? 'Cambiar' : 'Subir imagen'}
+            </label>
+            ${deleteBtn}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function uploadShowcaseFile(input, slot) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('image', file);
+  try {
+    const resp = await fetch(`${ADMIN}/showcase/${slot}`, {
+      method: 'POST', headers: authHeaders(), body: fd
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || `Error ${resp.status}`);
+    toast('✓ Imagen actualizada');
+    loadShowcase();
+  } catch(e) { toast(e.message, true); }
+}
+
+async function deleteShowcase(slot) {
+  if (!confirm('¿Eliminar esta imagen? Se usará la imagen por defecto.')) return;
+  try {
+    const resp = await fetch(`${ADMIN}/showcase/${slot}`, {
+      method: 'DELETE', headers: authHeaders()
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    toast('Imagen eliminada');
+    loadShowcase();
+  } catch(e) { toast(e.message, true); }
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+if (getToken()) showApp();
+</script>
+</body>
+</html>

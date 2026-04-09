@@ -1,0 +1,4394 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#1A1A18" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="description" content="Balam — Moda Virtual con IA" />
+    <title>Balam</title>
+    <link rel="manifest" href="manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ── Reset & Base ─────────────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+        background: #fafaf8;
+      }
+
+      :root {
+        --bg: #fafaf8;
+        --bg2: #f2efe9;
+        --bg3: #e8e3db;
+        --ink: #1a1a18;
+        --ink2: #4a4a45;
+        --ink3: #8a8880;
+        --gold: #c8a96e;
+        --gold-d: #a8893e;
+        --serif: "Cormorant Garamond", Georgia, serif;
+        --sans: "DM Sans", system-ui, sans-serif;
+        --mono: "DM Mono", monospace;
+        --r-sm: 8px;
+        --r-md: 14px;
+        --r-lg: 20px;
+        --r-xl: 28px;
+        --sheet-h: 52vh;
+        --safe-b: env(safe-area-inset-bottom, 0px);
+        --trans: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      body {
+        font-family: var(--sans);
+        color: var(--ink);
+        background: var(--bg);
+      }
+
+      /* ── App Shell ─────────────────────────────────────────────────────────── */
+      #app {
+        width: 100%;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* ── Screens ───────────────────────────────────────────────────────────── */
+      .screen {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(24px);
+        transition: var(--trans);
+        z-index: 1;
+      }
+      .screen.active {
+        opacity: 1;
+        pointer-events: all;
+        transform: translateY(0);
+        z-index: 2;
+      }
+      .screen.exit {
+        opacity: 0;
+        transform: translateY(-24px);
+        z-index: 1;
+      }
+
+      /* ── Progress Bar ──────────────────────────────────────────────────────── */
+      .progress-bar {
+        display: flex;
+        gap: 6px;
+        padding: 14px 24px 0;
+        align-items: center;
+      }
+      .progress-bar .seg {
+        height: 2.5px;
+        border-radius: 2px;
+        flex: 1;
+        background: var(--bg3);
+        transition: background 0.4s;
+      }
+      .progress-bar .seg.done {
+        background: var(--ink);
+      }
+      .progress-bar .seg.active {
+        background: var(--ink);
+      }
+      .back-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 22px;
+        color: var(--ink);
+        padding: 4px 12px 4px 0;
+        line-height: 1;
+        transition: opacity 0.2s;
+      }
+      .back-btn:active {
+        opacity: 0.5;
+      }
+
+      /* ── Typography ────────────────────────────────────────────────────────── */
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        font-weight: 400;
+        line-height: 1.1;
+      }
+      .display {
+        font-family: var(--serif);
+        font-size: clamp(36px, 8vw, 52px);
+        font-weight: 300;
+        letter-spacing: -0.5px;
+        line-height: 1.05;
+      }
+      .body-text {
+        font-size: 15px;
+        color: var(--ink2);
+        line-height: 1.55;
+        font-weight: 300;
+      }
+      .label {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink3);
+        font-weight: 400;
+      }
+      .price {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--ink2);
+      }
+      .brand {
+        font-family: var(--sans);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink3);
+        font-weight: 400;
+      }
+
+      /* ── Buttons ────────────────────────────────────────────────────────────── */
+      .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 100px;
+        font-family: var(--serif);
+        font-size: 18px;
+        font-weight: 400;
+        cursor: pointer;
+        border: none;
+        padding: 16px 32px;
+        transition: var(--trans);
+        letter-spacing: 0.01em;
+        width: 100%;
+      }
+      .btn-primary {
+        background: var(--ink);
+        color: var(--bg);
+      }
+      .btn-primary:active {
+        transform: scale(0.97);
+        background: #2c2c2a;
+      }
+      .btn-secondary {
+        background: transparent;
+        color: var(--ink);
+        border: 1.5px solid var(--ink);
+      }
+      .btn-secondary:active {
+        transform: scale(0.97);
+        background: var(--bg2);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink2);
+        font-family: var(--sans);
+        font-size: 14px;
+      }
+
+      /* ── Bottom Sheet ──────────────────────────────────────────────────────── */
+      .sheet {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        background: white;
+        border-radius: var(--r-xl) var(--r-xl) 0 0;
+        box-shadow: 0 -4px 40px rgba(26, 26, 24, 0.1);
+        z-index: 10;
+        transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .sheet-handle {
+        width: 36px;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--bg3);
+        margin: 12px auto 0;
+      }
+      .sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px 10px;
+      }
+      .sheet-title {
+        font-family: var(--serif);
+        font-size: 20px;
+        font-weight: 400;
+      }
+
+      /* ── SCREEN 1: Onboarding / Landing ────────────────────────────────────── */
+      #screen-landing {
+        background: var(--ink);
+        overflow: hidden;
+      }
+      #screen-landing .hero-bg {
+        position: absolute;
+        inset: 0;
+        background: var(--ink);
+      }
+      #screen-landing .hero-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.55;
+      }
+      #screen-landing .overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent 30%,
+          rgba(26, 26, 24, 0.85) 80%
+        );
+      }
+      #screen-landing .content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0 28px calc(48px + var(--safe-b)) 28px;
+      }
+      #screen-landing .logo {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 56px 28px 0;
+        z-index: 2;
+      }
+      #screen-landing .logo-text {
+        font-family: var(--serif);
+        font-size: 28px;
+        color: white;
+        letter-spacing: 0.02em;
+        font-weight: 300;
+      }
+      #screen-landing .tagline {
+        font-family: var(--serif);
+        font-size: clamp(38px, 9vw, 56px);
+        color: white;
+        font-weight: 300;
+        line-height: 1.05;
+        margin-bottom: 12px;
+      }
+      #screen-landing .sub {
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.65);
+        font-weight: 300;
+        margin-bottom: 36px;
+        line-height: 1.5;
+      }
+      #screen-landing .btn-primary {
+        background: white;
+        color: var(--ink);
+        margin-bottom: 14px;
+      }
+      #screen-landing .btn-secondary {
+        border-color: rgba(255, 255, 255, 0.4);
+        color: white;
+      }
+
+      /* ── SCREEN 2: Create Likeness ──────────────────────────────────────────── */
+      #screen-likeness {
+        background: white;
+      }
+      #screen-likeness .inner {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 32px;
+        text-align: center;
+      }
+      #screen-likeness h1 {
+        font-size: clamp(34px, 8vw, 48px);
+        margin-bottom: 14px;
+      }
+      #screen-likeness .body-text {
+        max-width: 300px;
+        margin-bottom: 40px;
+      }
+      .likeness-visual {
+        position: relative;
+        width: 220px;
+        height: 240px;
+        margin: 0 auto 40px;
+      }
+      .likeness-card {
+        position: absolute;
+        border-radius: var(--r-lg);
+        overflow: hidden;
+        background: var(--bg2);
+        box-shadow: 0 8px 32px rgba(26, 26, 24, 0.12);
+      }
+      .likeness-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .likeness-card.main {
+        width: 160px;
+        height: 200px;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+      }
+      .likeness-card.side {
+        width: 80px;
+        height: 120px;
+        z-index: 1;
+      }
+      .likeness-card.side-left {
+        top: 40px;
+        left: -10px;
+        transform: rotate(-5deg);
+        opacity: 0.7;
+      }
+      .likeness-card.side-right {
+        top: 40px;
+        right: -10px;
+        transform: rotate(5deg);
+        opacity: 0.7;
+      }
+      .face-chip {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 62px;
+        height: 62px;
+        border-radius: 50%;
+        border: 3px solid white;
+        overflow: hidden;
+        background: var(--bg3);
+        z-index: 3;
+        box-shadow: 0 4px 12px rgba(26, 26, 24, 0.15);
+      }
+      .face-chip img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #screen-likeness .btn-row {
+        width: 100%;
+        padding: 0 0 calc(24px + var(--safe-b));
+      }
+
+      /* ── SCREEN 3: Upload Photos ────────────────────────────────────────────── */
+      #screen-upload {
+        background: white;
+      }
+      #screen-upload .inner {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 24px 28px;
+        overflow-y: auto;
+      }
+      #screen-upload h1 {
+        font-size: clamp(32px, 7.5vw, 46px);
+        margin-bottom: 10px;
+        text-align: center;
+      }
+      #screen-upload .body-text {
+        text-align: center;
+        max-width: 290px;
+        margin-bottom: 28px;
+      }
+      .photos-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        width: 100%;
+        max-width: 260px;
+        margin-bottom: 24px;
+      }
+      .photo-slot {
+        aspect-ratio: 3/4;
+        border-radius: var(--r-md);
+        background: var(--bg2);
+        border: 1.5px dashed var(--bg3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        position: relative;
+        transition: var(--trans);
+      }
+      .photo-slot:hover {
+        border-color: var(--gold);
+        background: #fbf8f3;
+      }
+      @keyframes slot-pulse {
+        0%,
+        100% {
+          border-color: var(--bg3);
+          box-shadow: 0 0 0 0 rgba(200, 169, 110, 0);
+        }
+        50% {
+          border-color: var(--gold);
+          box-shadow: 0 0 0 6px rgba(200, 169, 110, 0.18);
+        }
+      }
+      .photo-slot:not(.filled) {
+        animation: slot-pulse 2s ease-in-out infinite;
+      }
+      .photo-slot img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        object-position: center center;
+        background: var(--bg2);
+      }
+      .photo-slot .slot-icon {
+        font-size: 28px;
+        color: var(--ink3);
+      }
+      .photo-slot .slot-label {
+        font-size: 11px;
+        color: var(--ink3);
+        margin-top: 4px;
+        text-align: center;
+        font-weight: 300;
+      }
+      .photo-slot-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .photo-slot.filled .slot-icon,
+      .photo-slot.filled .slot-label {
+        opacity: 0;
+      }
+      .tips {
+        background: var(--bg2);
+        border-radius: var(--r-md);
+        padding: 16px 18px;
+        width: 100%;
+        max-width: 320px;
+        margin-bottom: 24px;
+      }
+      .tips .label {
+        margin-bottom: 8px;
+      }
+      .tips ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .tips li {
+        font-size: 13.5px;
+        color: var(--ink2);
+        font-weight: 300;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .tips li::before {
+        content: "—";
+        color: var(--ink3);
+        font-size: 11px;
+        flex-shrink: 0;
+      }
+      #screen-upload .btn-row {
+        width: 100%;
+        padding: 0 28px calc(24px + var(--safe-b));
+      }
+      #fileInput {
+        display: none;
+      }
+
+      /* ── SCREEN 4: Processing ──────────────────────────────────────────────── */
+      #screen-processing {
+        background: white;
+      }
+      #screen-processing .inner {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px;
+        text-align: center;
+      }
+      #screen-processing h1 {
+        font-size: clamp(28px, 7vw, 42px);
+        margin-bottom: 12px;
+      }
+      #screen-processing .body-text {
+        max-width: 280px;
+        margin-bottom: 48px;
+      }
+      .process-visual {
+        width: 160px;
+        height: 160px;
+        position: relative;
+        margin: 0 auto 40px;
+      }
+      .process-ring {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: 2px solid var(--bg3);
+        position: absolute;
+      }
+      .process-ring-active {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: 2px solid var(--ink);
+        border-right-color: transparent;
+        position: absolute;
+        animation: spin 1.2s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .process-avatar {
+        width: 130px;
+        height: 130px;
+        border-radius: 50%;
+        overflow: hidden;
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        background: var(--bg2);
+      }
+      .process-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .process-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+        max-width: 260px;
+      }
+      .process-step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: var(--r-sm);
+        background: var(--bg2);
+        font-size: 13px;
+        color: var(--ink2);
+        font-weight: 300;
+        transition: var(--trans);
+      }
+      .process-step.active {
+        background: var(--ink);
+        color: white;
+      }
+      .process-step.done {
+        background: var(--bg2);
+      }
+      .process-step .step-icon {
+        font-size: 14px;
+        width: 18px;
+        text-align: center;
+      }
+      .process-step.done .step-icon::before {
+        content: "✓";
+        color: var(--gold);
+        font-weight: 500;
+      }
+
+      /* ── SCREEN 5: MAIN — Avatar + Try-On ─────────────────────────────────── */
+      #screen-main {
+        background: #f2eee8;
+        overflow: hidden;
+      }
+      .main-header {
+        padding: 52px 20px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .main-logo {
+        font-family: var(--serif);
+        font-size: 24px;
+        font-weight: 300;
+        color: var(--ink);
+        letter-spacing: 0.02em;
+      }
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: var(--ink2);
+        transition: var(--trans);
+      }
+      .icon-btn:active {
+        background: var(--bg3);
+      }
+      .btn-register-company {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--ink);
+        border-radius: 100px;
+        font-size: 13px;
+        font-family: var(--sans);
+        font-weight: 400;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition:
+          background 0.25s,
+          color 0.25s;
+        white-space: nowrap;
+      }
+      .btn-register-company:hover {
+        background: var(--ink);
+        color: #fafaf8;
+      }
+
+      /* Avatar area */
+      .avatar-area {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        min-height: 0;
+        transition: flex 0.3s ease;
+      }
+      .avatar-carousel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+      .avatar-card {
+        position: absolute;
+        border-radius: 28px 28px 0 0;
+        overflow: hidden;
+        background: var(--bg2);
+        transition: var(--trans);
+      }
+      .avatar-card.center {
+        width: 72%;
+        height: 95%;
+        z-index: 2;
+        box-shadow: 0 16px 48px rgba(26, 26, 24, 0.15);
+      }
+      .avatar-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: top center;
+      }
+      .avatar-result-badge {
+        position: absolute;
+        top: 96px;
+        right: 16px;
+        background: white;
+        border-radius: 20px;
+        padding: 5px 12px;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--ink);
+        display: none;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+        z-index: 20;
+      }
+      .avatar-result-badge.visible {
+        display: flex;
+      }
+
+      /* ── Cuenta Modal ────────────────────────────────────────────────────── */
+      #cuenta-modal {
+        position: fixed;
+        inset: 0;
+        background: #fff;
+        z-index: 300;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #cuenta-modal.open {
+        transform: translateY(0);
+      }
+
+      .cuenta-header {
+        display: flex;
+        align-items: center;
+        padding: 56px 24px 0;
+        flex-shrink: 0;
+      }
+      .cuenta-back {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 22px;
+        color: var(--ink);
+        padding: 4px;
+        line-height: 1;
+        margin-right: 8px;
+      }
+      .cuenta-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 24px calc(80px + env(safe-area-inset-bottom, 0px));
+      }
+      .cuenta-avatar-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 32px 0 28px;
+      }
+      .cuenta-avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--bg2);
+        margin-bottom: 14px;
+      }
+      .cuenta-name {
+        font-family: var(--serif);
+        font-size: 32px;
+        font-weight: 400;
+        color: var(--ink);
+        letter-spacing: 0.01em;
+      }
+      .cuenta-section-label {
+        font-size: 13px;
+        color: var(--ink3);
+        margin: 24px 0 6px;
+        letter-spacing: 0.01em;
+      }
+      .cuenta-list {
+        border: none;
+      }
+      .cuenta-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 0;
+        border: none;
+        cursor: pointer;
+        background: none;
+        width: 100%;
+        text-align: left;
+        font-family: var(--sans);
+        font-size: 17px;
+        color: var(--ink);
+        font-weight: 400;
+      }
+      .cuenta-item:active {
+        opacity: 0.6;
+      }
+      .cuenta-item-arrow {
+        color: var(--ink3);
+        font-size: 16px;
+      }
+      .cuenta-item-arrow.external {
+        transform: rotate(-45deg);
+        display: inline-block;
+      }
+
+      /* ── Delete Account Action Sheet ─────────────────────────────────────── */
+      #delete-sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      #delete-sheet-backdrop.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      #delete-sheet {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 501;
+        transform: translateY(calc(100% + 20px));
+        transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #delete-sheet.open {
+        transform: translateY(0);
+      }
+      .delete-sheet-card {
+        background: rgba(255, 255, 255, 0.97);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        overflow: hidden;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .delete-sheet-title {
+        font-family: var(--sans);
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--ink);
+        padding: 20px 20px 4px;
+      }
+      .delete-sheet-desc {
+        font-family: var(--sans);
+        font-size: 13px;
+        color: var(--ink2);
+        padding: 0 20px 18px;
+        line-height: 1.5;
+      }
+      .delete-sheet-divider {
+        height: 1px;
+        background: rgba(0, 0, 0, 0.1);
+      }
+      .delete-sheet-btn {
+        width: 100%;
+        background: none;
+        border: none;
+        font-family: var(--sans);
+        font-size: 17px;
+        padding: 17px 20px;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .delete-sheet-btn:active {
+        background: rgba(0, 0, 0, 0.06);
+      }
+      .delete-sheet-btn.danger {
+        color: #c0392b;
+        font-weight: 500;
+      }
+      .delete-sheet-cancel {
+        background: rgba(255, 255, 255, 0.97);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .delete-sheet-cancel .delete-sheet-btn {
+        font-weight: 600;
+        color: var(--ink);
+      }
+
+      /* ── Bottom Tab Bar ─────────────────────────────────────────────────── */
+      #tab-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(60px + env(safe-area-inset-bottom, 0px));
+        background: #fff;
+        border-top: 1px solid var(--bg3);
+        display: none;
+        align-items: center;
+        justify-content: space-around;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        z-index: 100;
+      }
+      #tab-bar.visible {
+        display: flex;
+      }
+      .tab-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        cursor: pointer;
+        padding: 8px 0;
+        color: var(--ink3);
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        transition: color 0.15s;
+        background: none;
+        border: none;
+        font-family: var(--sans);
+      }
+      .tab-item.active {
+        color: var(--ink);
+      }
+      .tab-item svg {
+        transition: transform 0.15s;
+      }
+      .tab-item:active svg {
+        transform: scale(0.88);
+      }
+      .tab-add {
+        width: 52px;
+        height: 52px;
+        background: var(--ink);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        border: none;
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        flex-shrink: 0;
+      }
+      .tab-add:active {
+        transform: scale(0.9);
+      }
+      .tab-add svg {
+        stroke: #fff;
+      }
+
+      /* Ajuste para dar espacio al tab bar en screen-main */
+      #screen-main.has-tabbar .sheet-cta {
+        padding-bottom: calc(12px + 60px + env(safe-area-inset-bottom, 0px));
+      }
+
+      /* ── Monetization card ───────────────────────────────────────────────── */
+      #monetization-card {
+        display: none;
+        position: fixed;
+        bottom: 140px;
+        left: 20px;
+        right: 20px;
+        background: #fff;
+        border-radius: 18px;
+        padding: 16px 16px 18px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14);
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        z-index: 190;
+        animation: slideUpCard 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #monetization-card.visible {
+        display: flex;
+      }
+      @keyframes slideUpCard {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .mono-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        background: var(--bg2);
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      .mono-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .mono-text {
+        flex: 1;
+        min-width: 0;
+      }
+      .mono-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 2px;
+      }
+      .mono-desc {
+        font-size: 11px;
+        color: var(--ink3);
+        line-height: 1.4;
+        margin-bottom: 4px;
+      }
+      .mono-reward {
+        font-size: 12px;
+        font-weight: 700;
+        color: #27ae60;
+      }
+      .mono-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .mono-like-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1.5px solid var(--bg3);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.15s;
+        flex-shrink: 0;
+      }
+      .mono-like-btn svg {
+        stroke: var(--ink3);
+        transition: all 0.2s;
+      }
+      .mono-like-btn.liked svg {
+        stroke: #e74c3c;
+        fill: #e74c3c;
+      }
+      .mono-like-btn:active {
+        transform: scale(0.88);
+      }
+      .mono-share-btn {
+        flex-shrink: 0;
+        background: var(--ink);
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: var(--sans);
+        transition: opacity 0.15s;
+        white-space: nowrap;
+      }
+      .mono-share-btn:hover {
+        opacity: 0.85;
+      }
+      .mono-close-btn {
+        position: absolute;
+        top: -14px;
+        right: 12px;
+        background: #fff;
+        border: none;
+        font-size: 13px;
+        color: var(--ink3);
+        cursor: pointer;
+        line-height: 1;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      /* ── Floating action panel ────────────────────────────────────────────── */
+      #tryon-actions {
+        position: fixed;
+        bottom: 240px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        z-index: 15;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      #tryon-actions.visible {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .tryon-action-btn {
+        background: rgba(255, 255, 255, 0.92);
+        border: none;
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        transition: transform 0.15s;
+      }
+      .tryon-action-btn:active {
+        transform: scale(0.9);
+      }
+      .tryon-action-btn svg {
+        stroke: var(--ink);
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      .tryon-action-btn.liked svg {
+        stroke: #e74c3c !important;
+        fill: #e74c3c !important;
+      }
+      @keyframes heartPulse {
+        0% {
+          transform: scale(1);
+        }
+        40% {
+          transform: scale(1.35);
+        }
+        70% {
+          transform: scale(0.9);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .tryon-action-btn.liked svg {
+        animation: heartPulse 0.4s ease forwards;
+      }
+      .company-logo-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: none;
+        overflow: hidden;
+        background: var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.02em;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+      .company-logo-circle:active {
+        transform: scale(0.92);
+      }
+      .company-logo-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .company-logo-label {
+        font-size: 10px;
+        color: var(--ink2);
+        max-width: 48px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      /* ── Bottom Sheet — Garment Selector ──────────────────────────────────── */
+      #garment-sheet.sheet-hidden {
+        transform: translateY(100%) !important;
+        pointer-events: none;
+      }
+      /* Avatar ocupa todo cuando el sheet está oculto */
+      #screen-main:has(#garment-sheet.sheet-hidden) .avatar-area {
+        flex: 1;
+      }
+      #garment-sheet {
+        height: var(--sheet-h);
+        transform: translateY(0);
+      }
+      #garment-sheet.collapsed {
+        transform: translateY(calc(var(--sheet-h) - 72px));
+      }
+
+      /* Sheet tabs */
+      .cat-tabs {
+        display: flex;
+        gap: 4px;
+        padding: 6px 16px 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        flex-shrink: 0;
+      }
+      .cat-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .cat-tab {
+        flex-shrink: 0;
+        padding: 6px 14px;
+        border-radius: 100px;
+        font-size: 12.5px;
+        font-weight: 400;
+        cursor: pointer;
+        border: 1px solid var(--bg3);
+        color: var(--ink2);
+        background: white;
+        transition: var(--trans);
+        white-space: nowrap;
+      }
+      .cat-tab.active {
+        background: var(--ink);
+        color: white;
+        border-color: var(--ink);
+      }
+      .cat-tab:active {
+        transform: scale(0.95);
+      }
+
+      /* Garment grid */
+      .garment-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: flex;
+        gap: 12px;
+        padding: 4px 16px 16px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        align-items: stretch;
+      }
+      .garment-scroll::-webkit-scrollbar {
+        display: none;
+      }
+
+      .garment-card {
+        flex-shrink: 0;
+        width: 140px;
+        cursor: pointer;
+        position: relative;
+      }
+      .garment-img-wrap {
+        width: 140px;
+        height: 168px;
+        border-radius: var(--r-md);
+        overflow: hidden;
+        background: var(--bg2);
+        position: relative;
+        transition: var(--trans);
+        border: 2px solid transparent;
+      }
+      .garment-card.selected .garment-img-wrap {
+        border-color: var(--ink);
+      }
+      .garment-card:active .garment-img-wrap {
+        transform: scale(0.96);
+      }
+      .garment-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+      .garment-card:hover .garment-img-wrap img {
+        transform: scale(1.04);
+      }
+      .garment-select-ring {
+        position: absolute;
+        inset: -2px;
+        border-radius: var(--r-md);
+        border: 2.5px solid var(--ink);
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+      .garment-card.selected .garment-select-ring {
+        opacity: 1;
+      }
+      .check-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--ink);
+        color: white;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(0.7);
+        transition: var(--trans);
+      }
+      .garment-card.selected .check-badge {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .garment-info {
+        padding: 7px 2px 0;
+      }
+      .garment-info .brand {
+        display: block;
+        margin-bottom: 2px;
+      }
+      .garment-info .name {
+        font-size: 12.5px;
+        color: var(--ink);
+        font-weight: 400;
+        line-height: 1.3;
+        margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .garment-info .price {
+        font-size: 12px;
+      }
+      .garment-sizes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        margin-top: 4px;
+      }
+      .garment-size-chip {
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 100px;
+        border: 1px solid var(--bg3);
+        color: var(--ink3);
+        background: var(--bg);
+        line-height: 1.4;
+      }
+
+      /* ── Grouped carousels ────────────────────────────────────────────────── */
+      .garment-scroll.grouped {
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        flex: 1;
+        gap: 0;
+        padding: 0 0 24px;
+        align-items: stretch;
+      }
+      .cat-section {
+        padding: 16px 0 8px;
+        flex-shrink: 0;
+      }
+      .cat-section-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding: 0 16px 10px;
+      }
+      .cat-section-title {
+        font-family: var(--serif);
+        font-size: 22px;
+        font-weight: 400;
+        color: var(--ink);
+        letter-spacing: 0.01em;
+      }
+      .cat-section-all {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 13px;
+        color: var(--ink3);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px 0;
+        font-family: var(--sans);
+      }
+      .cat-section-all:active {
+        opacity: 0.6;
+      }
+      .cat-carousel {
+        display: flex;
+        gap: 12px;
+        padding: 0 16px 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        cursor: grab;
+        user-select: none;
+      }
+      .cat-carousel:active {
+        cursor: grabbing;
+      }
+      .cat-carousel::-webkit-scrollbar {
+        display: none;
+      }
+      .cat-carousel .garment-card {
+        flex-shrink: 0;
+      }
+
+      /* ── Collapsed sheet — 2-column grid ────────────────────────────────────── */
+      #garment-sheet.collapsed .garment-scroll {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        overflow-x: hidden;
+        overflow-y: auto;
+        align-items: start;
+        gap: 10px;
+        padding: 6px 14px 14px;
+      }
+      #garment-sheet.collapsed .garment-card {
+        width: 100%;
+      }
+      #garment-sheet.collapsed .garment-img-wrap {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 3/4;
+      }
+
+      /* ── Sheet CTA buttons ───────────────────────────────────────────────────── */
+      .sheet-cta {
+        padding: 8px 16px calc(12px + var(--safe-b));
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      .sheet-cta .btn {
+        font-size: 16px;
+        padding: 14px 20px;
+      }
+      .sheet-cta .btn-primary {
+        flex: 1.6;
+      }
+      .sheet-cta .btn-secondary {
+        flex: 1;
+      }
+
+      /* ── Try-On Loading Overlay ─────────────────────────────────────────────── */
+      #tryon-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(250, 250, 248, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      #tryon-overlay.visible {
+        opacity: 1;
+        pointer-events: all;
+      }
+      .tryon-spinner {
+        width: 56px;
+        height: 56px;
+        border: 2px solid var(--bg3);
+        border-top-color: var(--ink);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+        margin-bottom: 20px;
+      }
+      #tryon-msg {
+        font-family: var(--serif);
+        font-size: 20px;
+        color: var(--ink);
+        text-align: center;
+        max-width: 220px;
+        transition: opacity 0.4s;
+      }
+      #tryon-progress {
+        width: 120px;
+        height: 2px;
+        background: var(--bg3);
+        border-radius: 2px;
+        margin-top: 16px;
+        overflow: hidden;
+      }
+      #tryon-progress-bar {
+        height: 100%;
+        background: var(--ink);
+        border-radius: 2px;
+        width: 0%;
+        transition: width 0.5s ease;
+      }
+
+      /* ── Toast ──────────────────────────────────────────────────────────────── */
+      #toast {
+        position: absolute;
+        bottom: calc(var(--sheet-h) + 16px);
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--ink);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 100px;
+        font-size: 13.5px;
+        font-weight: 400;
+        white-space: nowrap;
+        z-index: 30;
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      /* ── Wardrobe Modal ─────────────────────────────────────────────────────── */
+      #wardrobe-modal {
+        position: absolute;
+        inset: 0;
+        background: var(--bg);
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      #wardrobe-modal.open {
+        transform: translateY(0);
+      }
+      .modal-header {
+        padding: 56px 24px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .modal-title {
+        font-family: var(--serif);
+        font-size: 28px;
+        font-weight: 400;
+      }
+      .wardrobe-grid {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        align-content: start;
+      }
+      .wardrobe-item {
+        border-radius: var(--r-md);
+        overflow: hidden;
+        aspect-ratio: 3/4;
+        background: var(--bg2);
+        position: relative;
+      }
+      .wardrobe-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        cursor: zoom-in;
+      }
+
+      /* ── Lightbox ─────────────────────────────────────────────────────────── */
+      #lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.92);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+      }
+      #lightbox.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+      #lightbox img {
+        max-width: 92vw;
+        max-height: 88vh;
+        border-radius: 16px;
+        object-fit: contain;
+        transform: scale(0.92);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+      #lightbox.open img {
+        transform: scale(1);
+      }
+      #lightbox-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+      }
+      #lightbox-close:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+      #lightbox-garment {
+        position: absolute;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(8px);
+        border-radius: 20px;
+        padding: 6px 16px;
+        font-size: 12px;
+        color: #fff;
+        white-space: nowrap;
+        letter-spacing: 0.03em;
+      }
+      .wardrobe-empty {
+        grid-column: 1/-1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 32px;
+        text-align: center;
+      }
+      .wardrobe-empty .empty-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+      }
+      .wardrobe-empty p {
+        font-family: var(--serif);
+        font-size: 20px;
+        color: var(--ink2);
+      }
+
+      /* ── Loading skeleton ───────────────────────────────────────────────────── */
+      @keyframes shimmer {
+        to {
+          background-position: -200% 0;
+        }
+      }
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          var(--bg2) 25%,
+          var(--bg3) 50%,
+          var(--bg2) 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+      }
+
+      /* ── Responsive fine-tuning ─────────────────────────────────────────────── */
+      @media (max-height: 700px) {
+        :root {
+          --sheet-h: 48vh;
+        }
+        .avatar-card.center {
+          width: 56%;
+          height: 92%;
+        }
+      }
+      @media (min-width: 430px) {
+        .garment-card {
+          width: 150px;
+        }
+        .garment-img-wrap {
+          width: 150px;
+          height: 180px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <!-- ══ SCREEN: LANDING ═══════════════════════════════════════════════════ -->
+      <div id="screen-landing" class="screen active">
+        <div class="hero-bg">
+          <img
+            class="hero-img"
+            src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80"
+            alt=""
+          />
+          <div class="overlay"></div>
+        </div>
+        <div
+          class="logo"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+            position: relative;
+          "
+        >
+          <span class="logo-text">Balam</span>
+        </div>
+        <div class="content">
+          <p class="tagline">Mírate<br />antes de<br />comprar.</p>
+          <p class="sub">
+            Pruébate nuestras prendas con tu propio avatar generado por IA.
+          </p>
+          <button class="btn btn-primary" onclick="goTo('screen-likeness')">
+            Crear mi avatar
+          </button>
+          <button
+            class="btn btn-secondary"
+            style="margin-top: 10px"
+            onclick="pendingAction = goToMain; showAuthModal('login')"
+          >
+            Ya tengo mi avatar
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN: CREATE LIKENESS ══════════════════════════════════════════ -->
+      <div id="screen-likeness" class="screen">
+        <div class="progress-bar">
+          <button class="back-btn" onclick="goTo('screen-landing')">‹</button>
+          <div class="seg active"></div>
+          <div class="seg"></div>
+        </div>
+        <div class="inner">
+          <h1>Crea tu<br />apariencia</h1>
+          <p class="body-text">
+            Tu avatar personalizado hace fácil explorar nuevos looks y encontrar
+            ropa que amarás.
+          </p>
+          <div class="likeness-visual">
+            <div class="likeness-card side side-left">
+              <img
+                id="showcase-left"
+                src="https://images.unsplash.com/photo-1529720317453-c8da503f2051?w=200&q=80"
+                alt=""
+              />
+            </div>
+            <div class="likeness-card main">
+              <img
+                id="showcase-main"
+                src="https://images.unsplash.com/photo-1562114808-b4b33cf4a2d0?w=300&q=80"
+                alt=""
+              />
+            </div>
+            <div class="likeness-card side side-right">
+              <img
+                id="showcase-right"
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80"
+                alt=""
+              />
+            </div>
+            <div class="face-chip">
+              <img
+                id="showcase-face"
+                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80"
+                alt=""
+              />
+            </div>
+          </div>
+        </div>
+        <div class="btn-row" style="padding: 0 28px calc(32px + var(--safe-b))">
+          <button class="btn btn-primary" onclick="goTo('screen-upload')">
+            Continuar
+          </button>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN: UPLOAD PHOTOS ════════════════════════════════════════════ -->
+      <div id="screen-upload" class="screen">
+        <div class="progress-bar">
+          <button class="back-btn" onclick="goTo('screen-likeness')">‹</button>
+          <div class="seg done"></div>
+          <div class="seg active"></div>
+        </div>
+        <div class="inner">
+          <h1>Foto de<br />cuerpo completo</h1>
+          <p class="body-text">
+            Para entender tu forma corporal, necesitamos una foto de cuerpo
+            completo.
+          </p>
+          <div class="photos-grid">
+            <div class="photo-slot" id="slot-0" onclick="triggerUpload(0)">
+              <div class="photo-slot-inner">
+                <div class="slot-icon">+</div>
+                <div class="slot-label">Frente</div>
+                <div class="slot-label" style="font-size: 10px; opacity: 0.7">
+                  (Cuerpo completo)
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tips">
+            <div class="label">Para mejores resultados</div>
+            <ul>
+              <li>Solo tú, sin amigos</li>
+              <li>Cuerpo completo, cerca</li>
+              <li>Sin bolsas, mascotas o teléfonos</li>
+              <li>Sin lentes, sombreros o airpods</li>
+            </ul>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button
+            class="btn btn-primary"
+            id="upload-btn"
+            onclick="startProcessing()"
+            style="opacity: 0.4; pointer-events: none"
+          >
+            Subir Foto
+          </button>
+        </div>
+        <input
+          type="file"
+          id="fileInput"
+          accept="image/*"
+          multiple
+          onchange="handleFileSelect(event)"
+        />
+      </div>
+
+      <!-- ══ SCREEN: PROCESSING ═══════════════════════════════════════════════ -->
+      <div id="screen-processing" class="screen">
+        <div class="inner">
+          <div class="process-visual">
+            <div class="process-ring"></div>
+            <div class="process-ring-active" id="process-spinner"></div>
+            <div class="process-avatar">
+              <img id="process-preview" src="" alt="" />
+            </div>
+          </div>
+          <h1>Creando tu<br />imagen...</h1>
+          <p class="body-text" style="margin-bottom: 28px">
+            La IA está aprendiendo tu figura y estilo
+          </p>
+          <div class="process-steps">
+            <div class="process-step active" id="step-0">
+              <span class="step-icon">📸</span>
+              <span>Analizando tu foto</span>
+            </div>
+            <div class="process-step" id="step-1">
+              <span class="step-icon">🧬</span>
+              <span>Mapeando tu figura</span>
+            </div>
+            <div class="process-step" id="step-2">
+              <span class="step-icon">✨</span>
+              <span>Generando tu avatar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SCREEN: MAIN — AVATAR + TRY-ON ═══════════════════════════════════ -->
+      <div id="screen-main" class="screen">
+        <!-- Header -->
+        <div class="main-header">
+          <span class="main-logo">Balam</span>
+          <div class="header-actions">
+            <button
+              class="icon-btn"
+              onclick="openWardrobe()"
+              title="Mi armario"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <!-- hook curvo -->
+                <path d="M12 2 C14.5 2 16 3.5 16 5.5 C16 7 14.5 8 13 8.5" />
+                <!-- hombros curvos -->
+                <path d="M12 8.5 C11 8.5 5 11.5 2 16" />
+                <path d="M12 8.5 C13 8.5 19 11.5 22 16" />
+                <!-- barra inferior con extremos redondeados -->
+                <line x1="2" y1="16" x2="22" y2="16" />
+              </svg>
+            </button>
+            <button class="icon-btn" onclick="logout()" title="Cerrar sesión">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Avatar carousel -->
+        <div class="avatar-area" id="avatar-area">
+          <div class="avatar-carousel" id="avatar-carousel">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+
+        <!-- Chip superpuesto esquina superior derecha -->
+        <div id="tryon-result-badge" class="avatar-result-badge">
+          <span>✓</span> <span id="badge-name">Probándose</span>
+        </div>
+
+        <!-- Monetization card — solo visible al tocar compartir -->
+        <div id="monetization-card">
+          <div class="mono-icon">
+            <img id="mono-garment-img" src="" alt="" />
+          </div>
+          <div class="mono-text">
+            <div class="mono-title">¿Te gusta cómo te ves?</div>
+            <div class="mono-desc">
+              Comparte esta foto con tus amigos y cuando alguno compre esta
+              prenda con tu código <span id="mono-referral-code"></span>
+            </div>
+            <div class="mono-reward">💰 Tú ganas $150 mx</div>
+          </div>
+          <button class="mono-share-btn" onclick="shareResult()">
+            Compartir
+          </button>
+          <button
+            class="mono-close-btn"
+            onclick="closeMonetizationCard()"
+            title="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Try-on loading overlay -->
+        <div id="tryon-overlay">
+          <div class="tryon-spinner"></div>
+          <div id="tryon-msg">Analizando la prenda...</div>
+          <div id="tryon-progress"><div id="tryon-progress-bar"></div></div>
+        </div>
+
+        <!-- ── Garment Bottom Sheet ─────────────────────────────────────── -->
+        <div class="sheet" id="garment-sheet">
+          <div class="sheet-handle" id="sheet-drag-handle"></div>
+          <div class="sheet-header">
+            <span class="sheet-title">Crear look</span>
+          </div>
+
+          <!-- Category tabs -->
+          <div class="cat-tabs" id="cat-tabs">
+            <div class="cat-tab active" onclick="filterCat('all', this)">
+              Todos
+            </div>
+            <div class="cat-tab" onclick="filterCat('guayabera', this)">
+              Guayaberas
+            </div>
+            <div class="cat-tab" onclick="filterCat('tshirt-premium', this)">
+              Camisetas
+            </div>
+            <div class="cat-tab" onclick="filterCat('linen-shirt', this)">
+              Lino
+            </div>
+            <div class="cat-tab" onclick="filterCat('polo', this)">Polos</div>
+            <div class="cat-tab" onclick="filterCat('pants', this)">
+              Pantalones
+            </div>
+            <div class="cat-tab" onclick="filterCat('jeans', this)">Jeans</div>
+            <div class="cat-tab" onclick="filterCat('shorts', this)">
+              Shorts
+            </div>
+            <div class="cat-tab" onclick="filterCat('dress', this)">
+              Vestidos
+            </div>
+            <div class="cat-tab" onclick="filterCat('jumpsuit', this)">
+              Jumpsuits
+            </div>
+          </div>
+
+          <!-- Garment horizontal scroll -->
+          <div class="garment-scroll" id="garment-scroll">
+            <!-- Filled dynamically -->
+          </div>
+        </div>
+
+        <!-- Toast notification -->
+        <div id="toast"></div>
+      </div>
+
+      <!-- ══ WARDROBE MODAL ════════════════════════════════════════════════════ -->
+      <div id="wardrobe-modal">
+        <div class="modal-header">
+          <span class="modal-title">Mi Armario</span>
+          <button
+            class="icon-btn"
+            onclick="closeWardrobe()"
+            style="font-size: 22px"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="wardrobe-grid" id="wardrobe-grid">
+          <div class="wardrobe-empty">
+            <div class="empty-icon">👗</div>
+            <p>
+              Tu armario está vacío.<br />Pruébate prendas para guardarlas aquí.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DELETE ACCOUNT SHEET ════════════════════════════════════════════ -->
+    <div id="delete-sheet-backdrop" onclick="closeDeleteSheet()"></div>
+    <div id="delete-sheet">
+      <div class="delete-sheet-card">
+        <div class="delete-sheet-title">¿Estás seguro?</div>
+        <div class="delete-sheet-desc">
+          Esto eliminará tu cuenta de forma permanente y no podrá recuperarse.
+        </div>
+        <div class="delete-sheet-divider"></div>
+        <button
+          class="delete-sheet-btn danger"
+          onclick="confirmDeleteAccount()"
+        >
+          Eliminar cuenta
+        </button>
+      </div>
+      <div class="delete-sheet-cancel">
+        <button class="delete-sheet-btn" onclick="closeDeleteSheet()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ BOTTOM TAB BAR ════════════════════════════════════════════════════ -->
+    <div id="tab-bar">
+      <!-- Cuenta -->
+      <button class="tab-item" id="tab-cuenta" onclick="switchTabBar('cuenta')">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+        </svg>
+        Cuenta
+      </button>
+      <!-- + -->
+      <button class="tab-add" onclick="switchTabBar('crear')">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
+      <!-- Armario -->
+      <button
+        class="tab-item"
+        id="tab-armario"
+        onclick="switchTabBar('armario')"
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 2 C14.5 2 16 3.5 16 5.5 C16 7 14.5 8 13 8.5" />
+          <path d="M12 8.5 C11 8.5 5 11.5 2 16" />
+          <path d="M12 8.5 C13 8.5 19 11.5 22 16" />
+          <line x1="2" y1="16" x2="22" y2="16" />
+        </svg>
+        Armario
+      </button>
+    </div>
+
+    <!-- ══ CUENTA MODAL ════════════════════════════════════════════════════ -->
+    <div id="cuenta-modal">
+      <div class="cuenta-header">
+        <button class="cuenta-back" onclick="closeCuenta()">
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+      </div>
+      <div class="cuenta-body">
+        <!-- Avatar + nombre -->
+          <div class="cuenta-avatar-wrap">
+            <img
+              class="cuenta-avatar"
+              id="cuenta-avatar-img"
+              src=""
+              alt="Avatar"
+            />
+            <div class="cuenta-name" id="cuenta-user-name">Mi perfil</div>
+          </div>
+
+          <!-- Referidos -->
+          <style>
+            .referral-card {
+              background: #fafaf8;
+              border: 1.5px solid #e8e3db;
+              border-radius: 18px;
+              padding: 16px;
+              margin-bottom: 20px;
+            }
+            .referral-title {
+              font-size: 14px;
+              font-weight: 700;
+              margin-bottom: 4px;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+            .referral-sub {
+              font-size: 12px;
+              color: #8a8880;
+              margin-bottom: 12px;
+            }
+            .referral-code-wrap {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              background: #fff;
+              border: 1px dashed #cdc9c1;
+              border-radius: 12px;
+              padding: 8px 12px;
+              margin-bottom: 12px;
+            }
+            .referral-code-val {
+              font-family: "DM Mono", monospace;
+              font-weight: 700;
+              font-size: 16px;
+              letter-spacing: 0.1em;
+            }
+            .referral-copy-btn {
+              background: none;
+              border: none;
+              color: #1a1a18;
+              font-size: 13px;
+              font-weight: 600;
+              cursor: pointer;
+              padding: 4px 8px;
+            }
+            .referral-stats {
+              display: flex;
+              gap: 12px;
+            }
+            .referral-stat-item {
+              flex: 1;
+              background: #fff;
+              border-radius: 10px;
+              padding: 8px;
+              text-align: center;
+              border: 1px solid #f0ede8;
+            }
+            .referral-stat-num {
+              display: block;
+              font-weight: 700;
+              font-size: 16px;
+            }
+            .referral-stat-label {
+              font-size: 10px;
+              color: #8a8880;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            }
+          </style>
+          <div id="referral-section" class="referral-card" style="display: none">
+            <div class="referral-title">
+              <span>🎁</span> Invita y Gana
+            </div>
+            <p class="referral-sub">Gana 1 generación extra por cada amigo que se registre.</p>
+            <div class="referral-code-wrap">
+              <span class="referral-code-val" id="ref-code-display">------</span>
+              <button class="referral-copy-btn" onclick="copyReferralCode()">Copiar</button>
+            </div>
+            <div class="referral-stats">
+              <div class="referral-stat-item">
+                <span class="referral-stat-num" id="ref-count-display">0</span>
+                <span class="referral-stat-label">Amigos</span>
+              </div>
+              <div class="referral-stat-item">
+                <span class="referral-stat-num" id="ref-limit-display">3</span>
+                <span class="referral-stat-label">Límite hoy</span>
+              </div>
+            </div>
+          </div>
+
+        <!-- Configuración -->
+        <div class="cuenta-section-label">Configuración</div>
+        <div class="cuenta-list">
+          <button
+            class="cuenta-item"
+            onclick="
+              closeCuenta();
+              editarApariencia();
+            "
+          >
+            <span>Editar apariencia</span>
+            <span class="cuenta-item-arrow">›</span>
+          </button>
+          <button
+            class="cuenta-item"
+            onclick="location.href = 'company-dashboard.html'"
+          >
+            <span>Perfil empresarial</span>
+            <span class="cuenta-item-arrow">›</span>
+          </button>
+          <button class="cuenta-item" onclick="openDeleteSheet()">
+            <span>Cuenta</span>
+            <span class="cuenta-item-arrow">›</span>
+          </button>
+        </div>
+
+        <!-- Soporte -->
+        <div class="cuenta-section-label">Soporte</div>
+        <div class="cuenta-list">
+          <button class="cuenta-item">
+            <span>Contáctanos</span>
+            <span class="cuenta-item-arrow">›</span>
+          </button>
+          <button class="cuenta-item">
+            <span>Política de privacidad</span>
+            <span class="cuenta-item-arrow external">↗</span>
+          </button>
+          <button class="cuenta-item">
+            <span>Términos y condiciones</span>
+            <span class="cuenta-item-arrow external">↗</span>
+          </button>
+        </div>
+
+        <!-- Cerrar sesión -->
+        <button
+          class="cuenta-item"
+          style="margin-top: 24px; color: #c0392b"
+          onclick="
+            closeCuenta();
+            logout();
+          "
+        >
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ LIGHTBOX ══════════════════════════════════════════════════════════ -->
+    <div id="lightbox" onclick="closeLightbox()">
+      <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+      <img id="lightbox-img" src="" alt="" />
+      <div id="lightbox-garment"></div>
+    </div>
+
+    <!-- ══ FLOATING ACTION PANEL ═════════════════════════════════════════════ -->
+    <div id="tryon-actions">
+      <!-- Like -->
+      <button
+        class="tryon-action-btn"
+        id="btn-like"
+        onclick="toggleLike()"
+        title="Me gusta"
+      >
+        <svg
+          width="26"
+          height="26"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#1a1a18"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+          />
+        </svg>
+      </button>
+      <!-- Share -->
+      <button
+        class="tryon-action-btn"
+        id="btn-share-panel"
+        onclick="toggleMonetizationCard()"
+        title="Compartir"
+      >
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#1a1a18"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
+      </button>
+      <!-- Company logo -->
+      <div
+        id="company-logo-wrap"
+        style="display: flex; flex-direction: column; align-items: center"
+      >
+        <div
+          class="company-logo-circle"
+          id="company-logo-circle"
+          onclick="goToCompanyStore()"
+        ></div>
+        <span class="company-logo-label" id="company-logo-label"></span>
+      </div>
+    </div>
+    <!-- #app -->
+
+    <!-- ══ AUTH MODAL ═══════════════════════════════════════════════════════════ -->
+    <!-- AUTH MODAL ──────────────────────────────────────────────────── -->
+    <style>
+      #auth-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        background: rgba(26, 26, 24, 0.55);
+        align-items: flex-end;
+        justify-content: center;
+      }
+      #auth-sheet {
+        background: #fff;
+        border-radius: 28px 28px 0 0;
+        width: 100%;
+        max-width: 480px;
+        padding: 0 0 env(safe-area-inset-bottom, 20px);
+        position: relative;
+        transform: translateY(100%);
+        transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1);
+        max-height: 92vh;
+        overflow-y: auto;
+      }
+      #auth-modal.open #auth-sheet {
+        transform: translateY(0);
+      }
+      .auth-handle {
+        width: 40px;
+        height: 4px;
+        background: #e0ddd7;
+        border-radius: 2px;
+        margin: 14px auto 0;
+      }
+      .auth-inner {
+        padding: 28px 28px 32px;
+        display: flex;
+        flex-direction: column;
+      }
+      .auth-badge {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 11px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: #c8a96e;
+        margin-bottom: 8px;
+      }
+      .auth-title {
+        font-family: "Cormorant Garamond", serif;
+        font-size: 36px;
+        font-weight: 300;
+        color: #1a1a18;
+        line-height: 1.05;
+        margin-bottom: 6px;
+      }
+      .auth-sub {
+        font-size: 13px;
+        color: #8a8880;
+        line-height: 1.55;
+        margin-bottom: 28px;
+      }
+      .auth-err {
+        font-size: 12.5px;
+        color: #c0392b;
+        min-height: 16px;
+        margin-bottom: 14px;
+        line-height: 1.4;
+      }
+      .auth-field {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1.5px solid #e8e3db;
+        border-radius: 14px;
+        font-size: 15px;
+        font-family: "DM Sans", sans-serif;
+        outline: none;
+        color: #1a1a18;
+        background: #fafaf8;
+        box-sizing: border-box;
+        transition: border-color 0.18s;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      .auth-field:focus {
+        border-color: #1a1a18;
+      }
+      .auth-field::placeholder {
+        color: #b0ada8;
+      }
+      .auth-field-wrap {
+        position: relative;
+        margin-bottom: 12px;
+      }
+      .auth-field-wrap .auth-field {
+        margin-bottom: 0;
+        padding-right: 48px;
+      }
+      .auth-eye {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #b0ada8;
+        font-size: 18px;
+        line-height: 1;
+        padding: 4px;
+      }
+      .auth-btn-primary {
+        width: 100%;
+        padding: 15px;
+        background: #1a1a18;
+        color: #fff;
+        border: none;
+        border-radius: 100px;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 20px;
+        font-weight: 400;
+        cursor: pointer;
+        margin-top: 8px;
+        margin-bottom: 18px;
+        letter-spacing: 0.02em;
+        transition: opacity 0.15s;
+      }
+      .auth-btn-primary:active {
+        opacity: 0.75;
+      }
+      .auth-switch {
+        text-align: center;
+        font-size: 13px;
+        color: #8a8880;
+      }
+      .auth-switch a {
+        color: #1a1a18;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        font-weight: 500;
+      }
+      /* OTP */
+      .otp-row {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 22px;
+      }
+      .otp-digit {
+        width: 46px;
+        height: 58px;
+        text-align: center;
+        font-size: 26px;
+        font-weight: 700;
+        border: 1.5px solid #e8e3db;
+        border-radius: 14px;
+        font-family: "DM Mono", monospace;
+        outline: none;
+        background: #fafaf8;
+        color: #1a1a18;
+        transition: border-color 0.18s;
+        -webkit-appearance: none;
+        box-sizing: border-box;
+      }
+      .otp-digit:focus {
+        border-color: #1a1a18;
+        background: #fff;
+      }
+      .otp-timer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      #otp-timer {
+        font-size: 13px;
+        color: #8a8880;
+        font-family: "DM Mono", monospace;
+      }
+      #btn-resend {
+        background: none;
+        border: none;
+        font-size: 13px;
+        color: #8a8880;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        padding: 0;
+      }
+      #btn-resend:not(:disabled) {
+        color: #1a1a18;
+      }
+      #btn-resend:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        text-decoration: none;
+      }
+      /* close button */
+      .auth-close {
+        position: absolute;
+        top: 18px;
+        right: 20px;
+        background: #f2efe9;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #4a4a45;
+        font-size: 15px;
+        line-height: 1;
+        z-index: 1;
+      }
+    </style>
+
+    <div id="auth-modal" onclick="if (event.target === this) hideAuthModal();">
+      <div id="auth-sheet">
+        <div class="auth-handle"></div>
+        <button class="auth-close" onclick="hideAuthModal()">✕</button>
+
+        <!-- REGISTRO -->
+        <div id="auth-view-register" class="auth-inner">
+          <p class="auth-badge">Balam</p>
+          <h2 class="auth-title">Crea tu<br />cuenta</h2>
+          <p class="auth-sub">
+            Guarda tus looks y accede<br />desde cualquier dispositivo.
+          </p>
+          <div id="auth-reg-error" class="auth-err"></div>
+          <input
+            id="auth-name"
+            class="auth-field"
+            type="text"
+            placeholder="Nombre completo"
+            autocomplete="name"
+            style="margin-bottom: 12px"
+          />
+          <input
+            id="auth-email"
+            class="auth-field"
+            type="email"
+            placeholder="Correo electrónico"
+            autocomplete="email"
+            style="margin-bottom: 12px"
+          />
+          <div class="auth-field-wrap">
+            <input
+              id="auth-pass"
+              class="auth-field"
+              type="password"
+              placeholder="Contraseña (mín. 6 caracteres)"
+              autocomplete="new-password"
+            />
+            <button class="auth-eye" onclick="togglePassVis('auth-pass', this)">
+              👁
+            </button>
+          </div>
+          <input
+            id="auth-phone"
+            class="auth-field"
+            type="tel"
+            placeholder="Teléfono (opcional)"
+            maxlength="10"
+            oninput="this.value = this.value.replace(/\D/g, '')"
+            style="margin-top: 12px; margin-bottom: 0"
+          />
+          <input
+            id="auth-referral"
+            class="auth-field"
+            type="text"
+            placeholder="Código de referido (opcional)"
+            maxlength="6"
+            style="margin-top: 12px; margin-bottom: 0; text-transform: uppercase"
+          />
+          <button class="auth-btn-primary" onclick="doRegisterAuth()">
+            Crear cuenta
+          </button>
+          <p class="auth-switch">
+            ¿Ya tienes cuenta?
+            <a onclick="showAuthModal('login')">Inicia sesión</a>
+          </p>
+        </div>
+
+        <!-- VERIFICACIÓN -->
+        <div id="auth-view-verify" class="auth-inner" style="display: none">
+          <p class="auth-badge">Balam</p>
+          <h2 class="auth-title">Revisa<br />tu correo</h2>
+          <p id="verify-sub" class="auth-sub">
+            Enviamos un código de 6 dígitos.<br />Válido por 2 minutos.
+          </p>
+          <div id="auth-ver-error" class="auth-err"></div>
+          <div class="otp-row">
+            <input
+              class="otp-digit"
+              maxlength="1"
+              type="tel"
+              inputmode="numeric"
+            />
+            <input
+              class="otp-digit"
+              maxlength="1"
+              type="tel"
+              inputmode="numeric"
+            />
+            <input
+              class="otp-digit"
+              maxlength="1"
+              type="tel"
+              inputmode="numeric"
+            />
+            <input
+              class="otp-digit"
+              maxlength="1"
+              type="tel"
+              inputmode="numeric"
+            />
+            <input
+              class="otp-digit"
+              maxlength="1"
+              type="tel"
+              inputmode="numeric"
+            />
+            <input
+              class="otp-digit"
+              maxlength="1"
+              type="tel"
+              inputmode="numeric"
+            />
+          </div>
+          <div class="otp-timer-row">
+            <span id="otp-timer">02:00</span>
+            <button id="btn-resend" onclick="doResendCode()" disabled>
+              Reenviar código
+            </button>
+          </div>
+          <button class="auth-btn-primary" onclick="doVerifyAuth()">
+            Verificar
+          </button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="auth-view-login" class="auth-inner" style="display: none">
+          <p class="auth-badge">Balam</p>
+          <h2 class="auth-title">Bienvenido<br />de vuelta</h2>
+          <p class="auth-sub">Accede para ver tus looks guardados.</p>
+          <div id="auth-login-error" class="auth-err"></div>
+          <input
+            id="auth-login-email"
+            class="auth-field"
+            type="email"
+            placeholder="Correo electrónico"
+            autocomplete="email"
+            style="margin-bottom: 12px"
+          />
+          <div class="auth-field-wrap">
+            <input
+              id="auth-login-pass"
+              class="auth-field"
+              type="password"
+              placeholder="Contraseña"
+              autocomplete="current-password"
+            />
+            <button
+              class="auth-eye"
+              onclick="togglePassVis('auth-login-pass', this)"
+            >
+              👁
+            </button>
+          </div>
+          <p style="text-align: right; margin-top: -8px; margin-bottom: 16px;">
+            <a onclick="showAuthModal('forgot')" style="color: #8a8880; font-size: 13px; text-decoration: none; cursor: pointer;">¿Olvidaste tu contraseña?</a>
+          </p>
+          <button class="auth-btn-primary" onclick="doLoginAuth()">
+            Iniciar sesión
+          </button>
+          <p class="auth-switch">
+            ¿No tienes cuenta?
+            <a onclick="showAuthModal('register')">Regístrate</a>
+          </p>
+        </div>
+
+        <!-- FORGOT PASSWORD -->
+        <div id="auth-view-forgot" class="auth-inner" style="display: none">
+          <p class="auth-badge">Balam</p>
+          <h2 class="auth-title">Recuperar<br />contraseña</h2>
+          <p class="auth-sub">Te enviaremos un código para restablecerla.</p>
+          <div id="auth-forgot-error" class="auth-err"></div>
+          <input
+            id="auth-forgot-email"
+            class="auth-field"
+            type="email"
+            placeholder="Correo electrónico"
+            style="margin-bottom: 20px"
+          />
+          <button class="auth-btn-primary" onclick="doUserForgotPassword()">
+            Enviar código
+          </button>
+          <p class="auth-switch">
+            <a onclick="showAuthModal('login')">Volver al inicio</a>
+          </p>
+        </div>
+
+        <!-- RESET PASSWORD -->
+        <div id="auth-view-reset" class="auth-inner" style="display: none">
+          <p class="auth-badge">Balam</p>
+          <h2 class="auth-title">Nueva<br />contraseña</h2>
+          <p class="auth-sub">Ingresa el código que te enviamos y tu nueva clave.</p>
+          <div id="auth-reset-error" class="auth-err"></div>
+          <input
+            id="auth-reset-token"
+            class="auth-field"
+            type="text"
+            placeholder="Código de 6 dígitos"
+            style="margin-bottom: 12px"
+          />
+          <div class="auth-field-wrap">
+            <input
+              id="auth-reset-pass"
+              class="auth-field"
+              type="password"
+              placeholder="Nueva contraseña"
+            />
+            <button
+              class="auth-eye"
+              onclick="togglePassVis('auth-reset-pass', this)"
+            >
+              👁
+            </button>
+          </div>
+          <button class="auth-btn-primary" style="margin-top: 20px" onclick="doUserResetPassword()">
+            Restablecer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  CONFIG
+      // ─────────────────────────────────────────────────────────────────────────────
+      const API = "http://localhost:3018/api";
+      let token = localStorage.getItem("balam_token") || null;
+      let userId = null; // extracted from JWT sub claim
+      let avatarUrl = localStorage.getItem("balam_avatar") || null;
+      let selectedGarments = new Set();
+      let allGarments = [];
+      let wardrobeItems = [];
+      const _urlParams = new URLSearchParams(location.search);
+      let pendingGarmentId = _urlParams.get("garment") || null;
+      const _startAvatar = _urlParams.get("start") === "avatar";
+      let currentTryOnGarment = null;
+      let currentResultUrl = null;
+      let pendingAction = null;
+      let uploadedFiles = [null];
+      let uploadCount = 0;
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  AUTH
+      // ─────────────────────────────────────────────────────────────────────────────
+      async function getToken() {
+        if (token) {
+          try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            userId = payload.sub;
+            return token;
+          } catch (e) {
+            /* malformed — fall through to create new */
+          }
+        }
+        const resp = await fetch(`${API}/session`, { method: "POST" });
+        const data = await resp.json();
+        token = data.token;
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        userId = payload.sub;
+        localStorage.setItem("balam_token", token);
+        return token;
+      }
+
+      async function authFetch(url, opts = {}) {
+        const t = await getToken();
+        const headers = {
+          ...(opts.headers || {}),
+          Authorization: `Bearer ${t}`,
+        };
+        const resp = await fetch(url, { ...opts, headers });
+        if (resp.status === 401) {
+          localStorage.removeItem("balam_token");
+          localStorage.removeItem("balam_avatar");
+          token = null;
+          userId = null;
+          avatarUrl = null;
+          await getToken();
+          showToast("Sesión expirada. Sube tus fotos de nuevo.");
+          goTo("screen-landing");
+        }
+        return resp;
+      }
+
+      function checkIsRegistered() {
+        if (!token) return false;
+        try {
+          const p = JSON.parse(atob(token.split(".")[1]));
+          return p.is_registered === true && p.verified === true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function requireAuth(callback) {
+        if (checkIsRegistered()) {
+          callback();
+          return;
+        }
+        pendingAction = callback;
+        showAuthModal("register");
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  AUTH MODAL FUNCTIONS
+      // ─────────────────────────────────────────────────────────────────────────────
+      let _otpTimer = null;
+
+      function showAuthModal(view) {
+        const modal = document.getElementById("auth-modal");
+        modal.style.display = "flex";
+        ["auth-view-register", "auth-view-verify", "auth-view-login", "auth-view-forgot", "auth-view-reset"].forEach(
+          (v) => {
+            const el = document.getElementById(v);
+            if (el) el.style.display = "none";
+          },
+        );
+        document.getElementById("auth-view-" + view).style.display = "flex";
+        requestAnimationFrame(() => modal.classList.add("open"));
+        if (view === "verify") {
+          setupOtpInputs();
+          startOtpTimer(120);
+        }
+        if (view === "register") {
+          document.getElementById("auth-name").value = "";
+          document.getElementById("auth-email").value = "";
+          document.getElementById("auth-pass").value = "";
+        }
+        if (view === "login") {
+          document.getElementById("auth-login-email").value = "";
+          document.getElementById("auth-login-pass").value = "";
+          document.getElementById("auth-login-error").textContent = "";
+        }
+        if (view === "forgot") {
+          document.getElementById("auth-forgot-email").value = "";
+          document.getElementById("auth-forgot-error").textContent = "";
+        }
+        if (view === "reset") {
+          document.getElementById("auth-reset-token").value = "";
+          document.getElementById("auth-reset-pass").value = "";
+          document.getElementById("auth-reset-error").textContent = "";
+        }
+      }
+
+      function hideAuthModal() {
+        const modal = document.getElementById("auth-modal");
+        modal.classList.remove("open");
+        setTimeout(() => {
+          modal.style.display = "none";
+        }, 380);
+        if (_otpTimer) {
+          clearInterval(_otpTimer);
+          _otpTimer = null;
+        }
+        pendingAction = null;
+      }
+
+      function togglePassVis(inputId, btn) {
+        const inp = document.getElementById(inputId);
+        if (inp.type === "password") {
+          inp.type = "text";
+          btn.textContent = "🙈";
+        } else {
+          inp.type = "password";
+          btn.textContent = "👁";
+        }
+      }
+
+      function setupOtpInputs() {
+        const inputs = document.querySelectorAll(".otp-digit");
+        inputs.forEach((inp, i) => {
+          inp.value = "";
+          inp.addEventListener("input", () => {
+            inp.value = inp.value.replace(/\D/g, "").slice(0, 1);
+            if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+          });
+          inp.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && !inp.value && i > 0)
+              inputs[i - 1].focus();
+          });
+          inp.addEventListener("paste", (e) => {
+            const txt = (e.clipboardData || window.clipboardData)
+              .getData("text")
+              .replace(/\D/g, "");
+            inputs.forEach((el, j) => {
+              el.value = txt[j] || "";
+            });
+            inputs[Math.min(txt.length, inputs.length) - 1].focus();
+            e.preventDefault();
+          });
+        });
+        if (inputs.length) inputs[0].focus();
+      }
+
+      function startOtpTimer(secs) {
+        if (_otpTimer) clearInterval(_otpTimer);
+        let remaining = secs;
+        const timerEl = document.getElementById("otp-timer");
+        const resendBtn = document.getElementById("btn-resend");
+        const update = () => {
+          if (!timerEl) return;
+          const m = String(Math.floor(remaining / 60)).padStart(2, "0");
+          const s = String(remaining % 60).padStart(2, "0");
+          timerEl.textContent = m + ":" + s;
+          if (remaining <= 0) {
+            clearInterval(_otpTimer);
+            _otpTimer = null;
+            if (resendBtn) resendBtn.disabled = false;
+          } else {
+            remaining--;
+          }
+        };
+        update();
+        _otpTimer = setInterval(update, 1000);
+      }
+
+      async function doRegisterAuth() {
+        const name = document.getElementById("auth-name").value.trim();
+        const email = document.getElementById("auth-email").value.trim();
+        const pass = document.getElementById("auth-pass").value;
+        const phone = document.getElementById("auth-phone")?.value.trim() || "";
+        const referral_code = document.getElementById("auth-referral")?.value.trim() || "";
+        const errEl = document.getElementById("auth-reg-error");
+        errEl.textContent = "";
+        if (!name || !email || !pass) {
+          errEl.textContent = "Completa todos los campos.";
+          return;
+        }
+        if (pass.length < 6) {
+          errEl.textContent = "La contraseña debe tener al menos 6 caracteres.";
+          return;
+        }
+        try {
+          const res = await authFetch(`${API}/user/register-with-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password: pass, phone, referral_code }),
+          });
+          if (!res.ok) {
+            const raw = await res.text();
+            console.log("Error de servidor (" + res.status + "):", raw);
+            let d = {};
+            try { d = JSON.parse(raw); } catch(e){}
+            errEl.textContent = d.error || ("Status " + res.status + " - " + raw.substring(0, 60));
+            return;
+          }
+          showAuthModal("verify");
+        } catch (e) {
+          errEl.textContent = "Error de conexión.";
+        }
+      }
+
+      async function doVerifyAuth() {
+        const inputs = document.querySelectorAll(".otp-digit");
+        const code = Array.from(inputs)
+          .map((i) => i.value)
+          .join("");
+        const errEl = document.getElementById("auth-ver-error");
+        errEl.textContent = "";
+        if (code.length < 6) {
+          errEl.textContent = "Ingresa el código de 6 dígitos.";
+          return;
+        }
+        try {
+          const res = await authFetch(`${API}/user/verify-code`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            errEl.textContent = data.error || "Código inválido.";
+            return;
+          }
+          // Save new token with is_registered + verified
+          token = data.token;
+          localStorage.setItem("balam_token", token);
+          if (data.avatarUrl) {
+            avatarUrl = data.avatarUrl;
+            localStorage.setItem("balam_avatar", avatarUrl);
+          }
+          if (data.referralCode) {
+            localStorage.setItem("balam_referral_code", data.referralCode);
+          }
+          if (data.referrals !== undefined) {
+             localStorage.setItem("balam_referrals", data.referrals);
+          }
+          if (data.usage) {
+             localStorage.setItem("balam_usage", JSON.stringify(data.usage));
+          }
+          if (_otpTimer) {
+            clearInterval(_otpTimer);
+            _otpTimer = null;
+          }
+          document.getElementById("auth-modal").style.display = "none";
+          // Execute pending action
+          if (pendingAction) {
+            const fn = pendingAction;
+            pendingAction = null;
+            fn();
+          }
+        } catch (e) {
+          errEl.textContent = "Error de conexión.";
+        }
+      }
+
+      async function doResendCode() {
+        const errEl = document.getElementById("auth-ver-error");
+        errEl.textContent = "";
+        const btn = document.getElementById("btn-resend");
+        btn.disabled = true;
+        try {
+          const res = await authFetch(`${API}/user/resend-code`, {
+            method: "POST",
+          });
+          if (res.ok) {
+            startOtpTimer(120);
+            setupOtpInputs();
+            errEl.style.color = "#2a7a2a";
+            errEl.textContent = "Código reenviado.";
+            setTimeout(() => {
+              errEl.textContent = "";
+              errEl.style.color = "";
+            }, 3000);
+          } else {
+            const d = await res.json().catch(() => ({}));
+            errEl.textContent = d.error || "No se pudo reenviar.";
+            btn.disabled = false;
+          }
+        } catch (e) {
+          errEl.textContent = "Error de conexión.";
+          btn.disabled = false;
+        }
+      }
+
+      async function doLoginAuth() {
+        const email = document.getElementById("auth-login-email").value.trim();
+        const pass = document.getElementById("auth-login-pass").value;
+        const errEl = document.getElementById("auth-login-error");
+        errEl.textContent = "";
+        if (!email || !pass) {
+          errEl.textContent = "Ingresa tu correo y contraseña.";
+          return;
+        }
+        try {
+          const res = await fetch(API + "/user/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password: pass }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            errEl.textContent = data.error || "Credenciales incorrectas.";
+            return;
+          }
+          token = data.token;
+          localStorage.setItem("balam_token", token);
+          // Merge server userId if different
+          if (data.userId && data.userId !== userId) {
+            userId = data.userId;
+            localStorage.setItem("balam_user_id", userId);
+          }
+          if (data.avatarUrl) {
+            avatarUrl = data.avatarUrl;
+            localStorage.setItem("balam_avatar", avatarUrl);
+          }
+          if (data.referralCode) {
+            localStorage.setItem("balam_referral_code", data.referralCode);
+          }
+          if (data.referrals !== undefined) {
+            localStorage.setItem("balam_referrals", data.referrals);
+          }
+          if (data.usage) {
+            localStorage.setItem("balam_usage", JSON.stringify(data.usage));
+          }
+          document.getElementById("auth-modal").style.display = "none";
+          if (pendingAction) {
+            const fn = pendingAction;
+            pendingAction = null;
+            fn();
+          }
+        } catch (e) {
+          errEl.textContent = "Error de conexión.";
+        }
+      }
+
+      async function doUserForgotPassword() {
+        const email = document.getElementById("auth-forgot-email").value.trim();
+        const errEl = document.getElementById("auth-forgot-error");
+        errEl.textContent = "";
+        if (!email) {
+          errEl.textContent = "Ingresa tu correo.";
+          return;
+        }
+        try {
+          const res = await fetch(API + "/user/forgot-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = data.error || "Error al solicitar el código.";
+            return;
+          }
+          window.__reset_email = email;
+          showAuthModal("reset");
+        } catch (e) {
+          errEl.textContent = "Error de conexión.";
+        }
+      }
+
+      async function doUserResetPassword() {
+        const email = window.__reset_email;
+        const tokenVal = document.getElementById("auth-reset-token").value.trim();
+        const pass = document.getElementById("auth-reset-pass").value;
+        const errEl = document.getElementById("auth-reset-error");
+        errEl.textContent = "";
+
+        if (!tokenVal || !pass) {
+          errEl.textContent = "Ingresa el código y la nueva contraseña.";
+          return;
+        }
+        if (pass.length < 6) {
+          errEl.textContent = "Mínimo 6 caracteres.";
+          return;
+        }
+        try {
+          const res = await fetch(API + "/user/reset-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, token: tokenVal, new_password: pass }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            errEl.textContent = data.error || "Código o contraseña inválidos.";
+            return;
+          }
+          showToast("Contraseña restablecida con éxito.");
+          showAuthModal("login");
+        } catch (e) {
+          errEl.textContent = "Error de conexión.";
+        }
+      }
+
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  NAVIGATION
+      // ─────────────────────────────────────────────────────────────────────────────
+      function goTo(screenId) {
+        document.querySelectorAll(".screen").forEach((s) => {
+          s.classList.remove("active");
+          s.classList.remove("exit");
+        });
+        document.getElementById(screenId).classList.add("active");
+        // Tab bar solo visible en screen-main
+        const tabBar = document.getElementById("tab-bar");
+        if (tabBar) {
+          if (screenId === "screen-main") {
+            tabBar.classList.add("visible");
+          } else {
+            tabBar.classList.remove("visible");
+          }
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("balam_token");
+        localStorage.removeItem("balam_avatar");
+        token = null;
+        userId = null;
+        avatarUrl = null;
+        goTo("screen-landing");
+      }
+
+      function goToMain() {
+        if (!avatarUrl) {
+          avatarUrl =
+            "https://images.unsplash.com/photo-1562114808-b4b33cf4a2d0?w=400&q=80";
+          localStorage.setItem("balam_avatar", avatarUrl);
+        }
+        initMainScreen();
+        goTo("screen-main");
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  PHOTO UPLOAD
+      // ─────────────────────────────────────────────────────────────────────────────
+      let currentSlot = 0;
+      function triggerUpload(slot) {
+        currentSlot = slot;
+        document.getElementById("fileInput").click();
+      }
+
+      function handleFileSelect(event) {
+        const files = Array.from(event.target.files);
+        files.forEach((file, idx) => {
+          const slot = (currentSlot + idx) % 2;
+          uploadedFiles[slot] = file;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const slotEl = document.getElementById("slot-" + slot);
+            slotEl.classList.add("filled");
+            let img = slotEl.querySelector("img");
+            if (!img) {
+              img = document.createElement("img");
+              slotEl.appendChild(img);
+            }
+            img.src = e.target.result;
+            img.style.position = "absolute";
+            img.style.inset = "0";
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "contain";
+            img.style.objectPosition = "center center";
+            img.style.background = "var(--bg2)";
+          };
+          reader.readAsDataURL(file);
+          uploadCount++;
+        });
+        event.target.value = "";
+
+        const filled = uploadedFiles.filter(Boolean).length;
+        const btn = document.getElementById("upload-btn");
+        if (filled >= 1) {
+          btn.style.opacity = "1";
+          btn.style.pointerEvents = "auto";
+        }
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  PROCESSING / AVATAR GENERATION
+      // ─────────────────────────────────────────────────────────────────────────────
+      const PROCESS_MSGS = [
+        "Analizando la prenda...",
+        "Ajustando a tu figura...",
+        "Calibrando colores...",
+        "Finalizando tu look...",
+      ];
+
+      async function startProcessing() {
+        const previewFile = uploadedFiles.find(Boolean);
+        if (previewFile) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            document.getElementById("process-preview").src = e.target.result;
+          };
+          reader.readAsDataURL(previewFile);
+        }
+
+        goTo("screen-processing");
+        animateProcessSteps();
+
+        try {
+          // Try to upload to backend
+          const hasFiles = uploadedFiles.some(Boolean);
+          if (hasFiles) {
+            const formData = new FormData();
+            uploadedFiles.forEach((f) => {
+              if (f) formData.append("photos", f);
+            });
+
+            const resp = await authFetch(`${API}/avatar/upload`, {
+              method: "POST",
+              body: formData,
+            }).catch(() => null);
+
+            if (resp && resp.ok) {
+              const data = await resp.json();
+              avatarUrl = data.avatarUrl;
+              localStorage.setItem("balam_avatar", avatarUrl);
+            }
+          }
+        } catch (e) {
+          /* offline — use local preview */
+        }
+
+        // Fallback to local file preview
+        if (!avatarUrl && previewFile) {
+          avatarUrl = await readFileAsURL(previewFile);
+          localStorage.setItem("balam_avatar", avatarUrl);
+        }
+
+        setTimeout(() => {
+          initMainScreen();
+          goTo("screen-main");
+        }, 3800);
+      }
+
+      function readFileAsURL(file) {
+        return new Promise((resolve) => {
+          const r = new FileReader();
+          r.onload = (e) => resolve(e.target.result);
+          r.readAsDataURL(file);
+        });
+      }
+
+      function animateProcessSteps() {
+        const steps = ["step-0", "step-1", "step-2"];
+        steps.forEach((id, i) => {
+          setTimeout(() => {
+            if (i > 0) {
+              const prev = document.getElementById(steps[i - 1]);
+              prev.classList.remove("active");
+              prev.classList.add("done");
+              prev.querySelector(".step-icon").style.cssText = "";
+            }
+            document.getElementById(id).classList.add("active");
+          }, i * 1200);
+        });
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  MAIN SCREEN INIT
+      // ─────────────────────────────────────────────────────────────────────────────
+      async function initMainScreen() {
+        renderAvatarCarousel();
+        await loadGarments();
+        await loadWardrobeFromServer();
+        initSheetDrag();
+        showTabBar();
+        // Sheet oculto por defecto hasta que presionen "+"
+        document.getElementById("garment-sheet").classList.add("sheet-hidden");
+      }
+
+      async function loadWardrobeFromServer() {
+        if (!userId) return;
+        try {
+          const resp = await authFetch(`${API}/wardrobe/${userId}`);
+          if (!resp.ok) return;
+          const data = await resp.json();
+          wardrobeItems = (data.wardrobe || []).map((item) => ({
+            id: item.id,
+            resultUrl: item.result_url,
+            garment: allGarments.find((g) => g.id === item.garment_id) || {
+              name: "Prenda",
+              brand: "",
+            },
+          }));
+        } catch (e) {
+          // silencioso — empieza vacío si falla
+        }
+      }
+
+      function renderAvatarCarousel() {
+        const url =
+          avatarUrl ||
+          "https://images.unsplash.com/photo-1562114808-b4b33cf4a2d0?w=400&q=80";
+        const carousel = document.getElementById("avatar-carousel");
+        carousel.innerHTML = `
+    <div class="avatar-card center">
+      <img src="${url}" alt="Tu avatar" loading="lazy">
+    </div>
+  `;
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  GARMENTS
+      // ─────────────────────────────────────────────────────────────────────────────
+      async function loadGarments(category = "all") {
+        const scroll = document.getElementById("garment-scroll");
+        // Show skeletons
+        scroll.innerHTML = Array(6)
+          .fill(0)
+          .map(
+            () => `
+    <div class="garment-card">
+      <div class="garment-img-wrap skeleton" style="width:140px;height:168px;border-radius:14px;"></div>
+      <div style="padding:7px 2px 0;">
+        <div class="skeleton" style="height:10px;border-radius:4px;width:60%;margin-bottom:6px;"></div>
+        <div class="skeleton" style="height:12px;border-radius:4px;width:90%;margin-bottom:4px;"></div>
+        <div class="skeleton" style="height:10px;border-radius:4px;width:40%;"></div>
+      </div>
+    </div>`,
+          )
+          .join("");
+
+        try {
+          const url =
+            category === "all"
+              ? `${API}/garments`
+              : `${API}/garments?category=${category}`;
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const data = await resp.json();
+            allGarments = data.garments;
+          }
+        } catch (e) {
+          /* use embedded fallback */
+        }
+
+        renderGarments(allGarments, true);
+
+        if (pendingGarmentId) {
+          const target = allGarments.find((g) => g.id === pendingGarmentId);
+          if (target) {
+            pendingGarmentId = null;
+            setTimeout(() => {
+              selectGarment(target.id);
+              const card = document.getElementById("gc-" + target.id);
+              if (card)
+                card.scrollIntoView({
+                  behavior: "smooth",
+                  inline: "center",
+                  block: "nearest",
+                });
+            }, 300);
+          }
+        }
+      }
+
+      const CAT_LABELS = {
+        "tshirt-premium": "Camisetas",
+        "linen-shirt": "Lino",
+        guayabera: "Guayaberas",
+        polo: "Polos",
+        pants: "Pantalones",
+        jeans: "Jeans",
+        shorts: "Shorts",
+        dress: "Vestidos",
+        jumpsuit: "Jumpsuits",
+        hat: "Sombreros",
+        collar: "Collares",
+        accessory: "Accesorios",
+      };
+      const CAT_ORDER = [
+        "tshirt-premium",
+        "linen-shirt",
+        "guayabera",
+        "polo",
+        "pants",
+        "jeans",
+        "shorts",
+        "dress",
+        "jumpsuit",
+        "hat",
+        "collar",
+        "accessory",
+      ];
+
+      function garmentCardHTML(g) {
+        return `
+    <div class="garment-card ${selectedGarments.has(g.id) ? "selected" : ""}"
+         id="gc-${g.id}" onclick="selectGarment('${g.id}')">
+      <div class="garment-img-wrap">
+        <img src="${g.image}" alt="${g.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1594938298603-c8148c4b4ad2?w=400&q=80'">
+        <div class="check-badge">✓</div>
+      </div>
+      <div class="garment-info">
+        <span class="brand">${g.brand}</span>
+        <div class="name">${g.name}</div>
+        ${Array.isArray(g.sizes) && g.sizes.length ? `<div class="garment-sizes">${g.sizes.map((s) => `<span class="garment-size-chip">${s}</span>`).join("")}</div>` : ""}
+        <span class="price">$${g.price.toLocaleString()}</span>
+      </div>
+    </div>`;
+      }
+
+      function renderGarments(garments, grouped = false) {
+        const scroll = document.getElementById("garment-scroll");
+        if (!garments.length) {
+          scroll.classList.remove("grouped");
+          scroll.innerHTML = `<div style="padding:20px;color:var(--ink3);font-size:14px;">No hay prendas en esta categoría</div>`;
+          return;
+        }
+
+        if (grouped) {
+          scroll.classList.add("grouped");
+          // Agrupar por category (nombre real del producto)
+          const groups = {};
+          garments.forEach((g) => {
+            const cat = g.category || "tshirt-premium";
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(g);
+          });
+
+          scroll.innerHTML = CAT_ORDER.filter(
+            (cat) => groups[cat] && groups[cat].length > 0,
+          )
+            .map((cat) => {
+              const items = groups[cat];
+              const label = CAT_LABELS[cat] || cat;
+              const showAll = items.length > 4;
+              return `
+            <div class="cat-section">
+              <div class="cat-section-header">
+                <span class="cat-section-title">${label}</span>
+                ${
+                  showAll
+                    ? `<button class="cat-section-all" onclick="filterCatGroup('${cat}')">
+                  ${items.length} <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>`
+                    : ""
+                }
+              </div>
+              <div class="cat-carousel">
+                ${items.map((g) => garmentCardHTML(g)).join("")}
+              </div>
+            </div>`;
+            })
+            .join("");
+          attachCarouselDrag();
+        } else {
+          scroll.classList.remove("grouped");
+          scroll.innerHTML = garments.map((g) => garmentCardHTML(g)).join("");
+        }
+      }
+
+      function filterCat(cat, el) {
+        document
+          .querySelectorAll(".cat-tab")
+          .forEach((t) => t.classList.remove("active"));
+        el.classList.add("active");
+        if (cat === "all") {
+          renderGarments(allGarments, true);
+        } else {
+          const filtered = allGarments.filter((g) => g.category === cat);
+          renderGarments(filtered, false);
+        }
+      }
+
+      function filterCatGroup(cat) {
+        document
+          .querySelectorAll(".cat-tab")
+          .forEach((t) => t.classList.remove("active"));
+        const filtered = allGarments.filter((g) => g.category === cat);
+        renderGarments(filtered, false);
+      }
+
+      // ── Drag-to-scroll para carruseles con mouse ───────────────────────────
+      function enableCarouselDrag(el) {
+        let isDown = false,
+          startX,
+          scrollLeft;
+        el.addEventListener("mousedown", (e) => {
+          isDown = true;
+          startX = e.pageX - el.offsetLeft;
+          scrollLeft = el.scrollLeft;
+          el.style.cursor = "grabbing";
+        });
+        el.addEventListener("mouseleave", () => {
+          isDown = false;
+          el.style.cursor = "grab";
+        });
+        el.addEventListener("mouseup", () => {
+          isDown = false;
+          el.style.cursor = "grab";
+        });
+        el.addEventListener("mousemove", (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const x = e.pageX - el.offsetLeft;
+          el.scrollLeft = scrollLeft - (x - startX);
+        });
+      }
+
+      function attachCarouselDrag() {
+        document.querySelectorAll(".cat-carousel").forEach(enableCarouselDrag);
+      }
+
+      function selectGarment(id) {
+        // Single select — one at a time for try-on
+        const wasSelected = selectedGarments.has(id);
+        selectedGarments.clear();
+
+        if (!wasSelected) {
+          selectedGarments.add(id);
+          currentTryOnGarment = allGarments.find((g) => g.id === id);
+        } else {
+          currentTryOnGarment = null;
+        }
+
+        // Update UI
+        document
+          .querySelectorAll(".garment-card")
+          .forEach((c) => c.classList.remove("selected"));
+        if (!wasSelected) {
+          const card = document.getElementById("gc-" + id);
+          if (card) card.classList.add("selected");
+          // Collapse sheet so avatar is fully visible
+          const sh = document.getElementById("garment-sheet");
+          sh.classList.remove("sheet-hidden");
+          sh.classList.add("collapsed");
+          updateActionsVisibility(true);
+        }
+
+        // Auto-trigger try-on. Primer try-on libre, segundo requiere cuenta
+        if (currentTryOnGarment) {
+          if (wardrobeItems.length >= 1) {
+            requireAuth(() => setTimeout(() => doTryOn(), 200));
+          } else {
+            setTimeout(() => doTryOn(), 200);
+          }
+        }
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  TRY-ON
+      // ─────────────────────────────────────────────────────────────────────────────
+      const TRYON_MSGS = [
+        "Analizando la prenda...",
+        "Ajustando a tu figura...",
+        "Calculando la caída del tejido...",
+        "Calibrando colores y luz...",
+        "Finalizando tu look...",
+      ];
+
+      let tryOnMsgInterval = null;
+
+      async function doTryOn() {
+        if (!currentTryOnGarment) {
+          showToast("Selecciona una prenda primero");
+          return;
+        }
+
+        // Si ya existe un resultado para esta prenda en el armario, usarlo directamente
+        const cached = wardrobeItems.find(
+          (item) => item.garment && item.garment.id === currentTryOnGarment.id,
+        );
+        if (cached) {
+          applyTryOnResult(cached.resultUrl, true); // true = ya guardado, no volver a guardar
+          return;
+        }
+
+        showTryOnLoading();
+
+        let msgIndex = 0;
+        document.getElementById("tryon-msg").textContent = TRYON_MSGS[0];
+        document.getElementById("tryon-progress-bar").style.width = "10%";
+
+        tryOnMsgInterval = setInterval(() => {
+          msgIndex = (msgIndex + 1) % TRYON_MSGS.length;
+          const msgEl = document.getElementById("tryon-msg");
+          msgEl.style.opacity = "0";
+          setTimeout(() => {
+            msgEl.textContent = TRYON_MSGS[msgIndex];
+            msgEl.style.opacity = "1";
+          }, 200);
+          const pct = Math.min(90, 10 + msgIndex * 18);
+          document.getElementById("tryon-progress-bar").style.width = pct + "%";
+        }, 1200);
+
+        try {
+          let resultUrl = null;
+
+          // Call API with 120 s timeout (fashn.ai puede tardar ~30-60 s)
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 120000);
+
+          let resp = null;
+          try {
+            resp = await authFetch(`${API}/tryon`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                garmentId: currentTryOnGarment.id,
+                avatarUrl,
+              }),
+              signal: controller.signal,
+            });
+          } catch (fetchErr) {
+            throw new Error(
+              "No se pudo conectar al servidor. ¿Está corriendo node server.js?",
+            );
+          } finally {
+            clearTimeout(timeoutId);
+          }
+
+          if (resp && resp.ok) {
+            const data = await resp.json();
+            resultUrl = data.resultUrl;
+          } else if (resp && !resp.ok) {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData.error || `Error ${resp.status}`);
+          }
+
+          if (!resultUrl) {
+            throw new Error(
+              "La API no devolvió imagen. Revisa la consola del servidor.",
+            );
+          }
+
+          clearInterval(tryOnMsgInterval);
+          document.getElementById("tryon-progress-bar").style.width = "100%";
+          await new Promise((r) => setTimeout(r, 400));
+
+          hideTryOnLoading();
+          applyTryOnResult(resultUrl);
+        } catch (e) {
+          clearInterval(tryOnMsgInterval);
+          hideTryOnLoading();
+          showToast("Error: " + (e.message || "Intenta de nuevo"));
+        }
+      }
+
+      function applyTryOnResult(resultUrl, alreadySaved = false) {
+        currentResultUrl = resultUrl;
+        // Ocultar sheet completamente al mostrar resultado
+        const sheet = document.getElementById("garment-sheet");
+        sheet.classList.add("sheet-hidden");
+        sheet.classList.remove("collapsed");
+        // Replace center avatar card image with try-on result
+        const centerCard = document.querySelector(".avatar-card.center img");
+        if (centerCard) {
+          centerCard.style.transition = "opacity 0.4s";
+          centerCard.style.opacity = "0";
+          setTimeout(() => {
+            centerCard.src = resultUrl;
+            centerCard.style.opacity = "1";
+          }, 300);
+        }
+
+        // Show badge
+        const badge = document.getElementById("tryon-result-badge");
+        const badgeName = document.getElementById("badge-name");
+        badgeName.textContent = currentTryOnGarment.name;
+        badge.classList.add("visible");
+
+        if (alreadySaved) {
+          showToast(`✓ ${currentTryOnGarment.brand} — look guardado`);
+        } else {
+          addToWardrobe(resultUrl);
+          showToast(`✓ ${currentTryOnGarment.brand} aplicado`);
+        }
+        showTryOnActions();
+      }
+
+      function showTryOnLoading() {
+        document.getElementById("tryon-overlay").classList.add("visible");
+      }
+      function hideTryOnLoading() {
+        document.getElementById("tryon-overlay").classList.remove("visible");
+        document.getElementById("tryon-progress-bar").style.width = "0%";
+      }
+
+      function doRemix() {
+        if (!currentTryOnGarment) {
+          showToast("Selecciona una prenda primero");
+          return;
+        }
+        showToast("🎲 Generando variación...");
+        setTimeout(() => doTryOn(), 800);
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  WARDROBE
+      // ─────────────────────────────────────────────────────────────────────────────
+      function addToWardrobe(resultUrl) {
+        if (!currentTryOnGarment) return;
+        wardrobeItems.unshift({
+          id: Date.now(),
+          resultUrl,
+          garment: { ...currentTryOnGarment },
+        });
+
+        // Persist try-on to backend
+        authFetch(`${API}/wardrobe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            garmentId: currentTryOnGarment.id,
+            resultUrl,
+          }),
+        }).catch(() => {});
+
+        renderWardrobe();
+      }
+
+      function renderWardrobe() {
+        const grid = document.getElementById("wardrobe-grid");
+        if (!wardrobeItems.length) {
+          grid.innerHTML = `<div class="wardrobe-empty"><div class="empty-icon">👗</div><p>Tu armario está vacío.<br>Pruébate prendas para guardarlas aquí.</p></div>`;
+          return;
+        }
+        grid.innerHTML = wardrobeItems
+          .map(
+            (item) => `
+    <div class="wardrobe-item" onclick="openLightbox('${item.resultUrl}','${(item.garment.brand || "") + " — " + (item.garment.name || "")}')">
+      <img src="${item.resultUrl}" alt="${item.garment.name}" loading="lazy">
+    </div>
+  `,
+          )
+          .join("");
+      }
+
+      // ── Actions visibility (hide when sheet expanded) ─────────────────────
+      function updateActionsVisibility(sheetCollapsed) {
+        const panel = document.getElementById("tryon-actions");
+        if (!panel.classList.contains("visible")) return; // no result yet
+        panel.style.opacity = sheetCollapsed ? "1" : "0";
+        panel.style.pointerEvents = sheetCollapsed ? "all" : "none";
+      }
+
+      // ── Bottom Tab Bar ─────────────────────────────────────────────────────
+      function showTabBar() {
+        document.getElementById("tab-bar").classList.add("visible");
+        document.getElementById("screen-main").classList.add("has-tabbar");
+      }
+
+      function switchTabBar(tab) {
+        const sheet = document.getElementById("garment-sheet");
+        if (tab === "crear") {
+          const isHidden = sheet.classList.contains("sheet-hidden");
+          if (isHidden) {
+            sheet.classList.remove("sheet-hidden");
+            sheet.classList.remove("collapsed");
+            updateActionsVisibility(false);
+          } else {
+            sheet.classList.add("sheet-hidden");
+          }
+          return;
+        }
+        // Cualquier otro tab oculta el sheet
+        sheet.classList.add("sheet-hidden");
+        if (tab === "armario") {
+          openWardrobe();
+          return;
+        }
+        if (tab === "cuenta") {
+          openCuenta();
+          return;
+        }
+      }
+
+      // ── Cuenta modal ──────────────────────────────────────────────────────
+      function openCuenta() {
+        // Populate avatar + name from current session
+        const avatarImg = document.getElementById("cuenta-avatar-img");
+        const avatarPreview = document.getElementById("avatar-preview");
+        if (
+          avatarPreview &&
+          avatarPreview.src &&
+          !avatarPreview.src.endsWith("/")
+        ) {
+          avatarImg.src = avatarPreview.src;
+        } else {
+          // fallback placeholder
+          avatarImg.src =
+            "https://ui-avatars.com/api/?name=Usuario&background=e8e3db&color=4a4a45&size=90";
+        }
+
+        // Referral Logic UI
+        const refSection = document.getElementById("referral-section");
+        const code = localStorage.getItem("balam_referral_code");
+        if (code) {
+          refSection.style.display = "block";
+          document.getElementById("ref-code-display").textContent = code;
+          // Mostrar valores cacheados mientras llega la respuesta fresca
+          document.getElementById("ref-count-display").textContent = localStorage.getItem("balam_referrals") || "0";
+          const usageCached = JSON.parse(localStorage.getItem("balam_usage") || "{}");
+          document.getElementById("ref-limit-display").textContent = usageCached.limit || "3";
+          // Refrescar desde el servidor en segundo plano
+          const token = localStorage.getItem("balam_token");
+          if (token) {
+            fetch("/api/user/me", { headers: { Authorization: "Bearer " + token } })
+              .then(r => r.ok ? r.json() : null)
+              .then(data => {
+                if (!data) return;
+                if (data.referrals !== undefined) {
+                  document.getElementById("ref-count-display").textContent = data.referrals;
+                  localStorage.setItem("balam_referrals", data.referrals);
+                }
+                if (data.usage) {
+                  document.getElementById("ref-limit-display").textContent = data.usage.limit || "3";
+                  localStorage.setItem("balam_usage", JSON.stringify(data.usage));
+                }
+              })
+              .catch(() => {});
+          }
+        } else {
+          refSection.style.display = "none";
+        }
+
+        document.getElementById("cuenta-modal").classList.add("open");
+        document.getElementById("tab-cuenta").classList.add("active");
+      }
+
+      function copyReferralCode() {
+        const code = document.getElementById("ref-code-display").textContent;
+        const appUrl = window.location.origin + window.location.pathname;
+        const msg = `¡Prueba Balam y diseña tus looks con IA! Usa mi código ${code} al registrarte: ${appUrl}`;
+        
+        if (navigator.share) {
+          navigator.share({
+            title: 'Balam - Diseña tus looks',
+            text: msg,
+            url: appUrl
+          }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(msg).then(() => {
+            alert("¡Mensaje de invitación copiado!");
+          });
+        }
+      }
+
+      function closeCuenta() {
+        document.getElementById("cuenta-modal").classList.remove("open");
+        document.getElementById("tab-cuenta").classList.remove("active");
+      }
+
+      function editarApariencia() {
+        goTo("screen-upload");
+      }
+
+      // ── Delete Account Sheet ───────────────────────────────────────────────
+      function openDeleteSheet() {
+        document.getElementById("delete-sheet-backdrop").classList.add("open");
+        document.getElementById("delete-sheet").classList.add("open");
+      }
+
+      function closeDeleteSheet() {
+        document
+          .getElementById("delete-sheet-backdrop")
+          .classList.remove("open");
+        document.getElementById("delete-sheet").classList.remove("open");
+      }
+
+      async function confirmDeleteAccount() {
+        closeDeleteSheet();
+        closeCuenta();
+        // Limpiar sesión local
+        localStorage.removeItem("balam_token");
+        localStorage.removeItem("balam_avatar");
+        localStorage.removeItem("liked_garments");
+        // Intentar eliminar en el servidor
+        try {
+          if (token) {
+            await fetch(`${API}/users/${userId}`, {
+              method: "DELETE",
+              headers: { Authorization: "Bearer " + token },
+            });
+          }
+        } catch (e) {}
+        token = null;
+        userId = null;
+        avatarUrl = null;
+        wardrobeItems = [];
+        showToast("Cuenta eliminada");
+        setTimeout(() => {
+          goTo("screen-landing");
+          document.getElementById("tab-bar").classList.remove("visible");
+        }, 800);
+      }
+
+      // ── Lightbox ───────────────────────────────────────────────────────────
+      function openLightbox(url, label) {
+        const lb = document.getElementById("lightbox");
+        document.getElementById("lightbox-img").src = url;
+        document.getElementById("lightbox-garment").textContent = label;
+        lb.classList.add("open");
+      }
+      function closeLightbox() {
+        document.getElementById("lightbox").classList.remove("open");
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeLightbox();
+      });
+
+      // ── Floating action panel ──────────────────────────────────────────────
+      function showTryOnActions() {
+        document.getElementById("tryon-actions").classList.add("visible");
+        updateLikeBtn();
+        updateCompanyLogo();
+      }
+
+      function hideTryOnActions() {
+        document.getElementById("tryon-actions").classList.remove("visible");
+        closeMonetizationCard();
+      }
+
+      let monoCardOpen = false;
+
+      function toggleMonetizationCard() {
+        requireAuth(() => {
+          monoCardOpen ? closeMonetizationCard() : openMonetizationCard();
+        });
+      }
+
+      function openMonetizationCard() {
+        monoCardOpen = true;
+        if (currentTryOnGarment?.image) {
+          document.getElementById("mono-garment-img").src =
+            currentTryOnGarment.image;
+        }
+        // Mostrar código de referido real del usuario
+        const refCode = localStorage.getItem("balam_referral_code");
+        const codeEl = document.getElementById("mono-referral-code");
+        if (codeEl) codeEl.textContent = refCode || "";
+        document.getElementById("monetization-card").classList.add("visible");
+        document.getElementById("btn-share-panel").style.display = "none";
+      }
+
+      function closeMonetizationCard() {
+        monoCardOpen = false;
+        document
+          .getElementById("monetization-card")
+          .classList.remove("visible");
+        const btn = document.getElementById("btn-share-panel");
+        if (btn) btn.style.display = "";
+      }
+
+      function toggleLike() {
+        if (!currentTryOnGarment) return;
+        requireAuth(() => {
+          const key = "liked_garments";
+          const liked = JSON.parse(localStorage.getItem(key) || "[]");
+          const id = currentTryOnGarment.id;
+          const idx = liked.indexOf(id);
+          if (idx === -1) liked.push(id);
+          else liked.splice(idx, 1);
+          localStorage.setItem(key, JSON.stringify(liked));
+          updateLikeBtn();
+        });
+      }
+
+      function updateLikeBtn() {
+        if (!currentTryOnGarment) return;
+        const liked = JSON.parse(
+          localStorage.getItem("liked_garments") || "[]",
+        );
+        const btn = document.getElementById("btn-like");
+        if (!btn) return;
+        if (liked.includes(currentTryOnGarment.id)) {
+          btn.classList.add("liked");
+        } else {
+          btn.classList.remove("liked");
+        }
+      }
+
+      async function shareResult() {
+        const garment = currentTryOnGarment;
+        const resultUrl = currentResultUrl;
+        if (!resultUrl) { showToast("No hay look para compartir"); return; }
+
+        const garmentName = garment ? `${garment.brand} — ${garment.name}` : "este look";
+        const refCode = localStorage.getItem("balam_referral_code");
+
+        // Construir URL del producto (tienda de empresa o app general)
+        const base = location.origin;
+        const productUrl = garment?.company_slug
+          ? `${base}/tienda?slug=${garment.company_slug}&garment=${garment.id}`
+          : `${base}/?garment=${garment?.id || ""}`;
+
+        const text = refCode
+          ? `¡Mira cómo me veo con ${garmentName}! 👗\nPruébalo tú también: ${productUrl}\nUsa mi código ${refCode} al registrarte`
+          : `¡Mira cómo me veo con ${garmentName}! 👗\nPruébalo tú también: ${productUrl}`;
+
+        if (navigator.share) {
+          try {
+            // Sin URL — evita exponer Fashn.ai y el share sheet abre igual con todas las apps
+            await navigator.share({ title: "Balam — Look virtual", text });
+          } catch (e) {
+            if (e.name !== "AbortError") {
+              try {
+                await navigator.clipboard.writeText(text);
+                showToast("¡Mensaje copiado!");
+              } catch (_) {
+                prompt("Copia y comparte:", text);
+              }
+            }
+          }
+        } else {
+          try {
+            await navigator.clipboard.writeText(text);
+            showToast("¡Mensaje copiado!");
+          } catch (_) {
+            prompt("Copia y comparte:", text);
+          }
+        }
+
+        // Guardar en DB en segundo plano
+        if (token) {
+          fetch(`${API}/looks/share`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({ garmentId: garment?.id || null, resultUrl }),
+          }).catch(() => {});
+        }
+      }
+
+      function updateCompanyLogo() {
+        if (!currentTryOnGarment) return;
+        const circle = document.getElementById("company-logo-circle");
+        const label = document.getElementById("company-logo-label");
+        const wrap = document.getElementById("company-logo-wrap");
+        const { company_slug, company_logo, company_name, brand } =
+          currentTryOnGarment;
+
+        wrap.style.display = "flex";
+
+        if (company_logo) {
+          circle.innerHTML = `<img src="${company_logo}" alt="${brand}">`;
+        } else {
+          const initials = (company_name || brand || "?")
+            .slice(0, 2)
+            .toUpperCase();
+          circle.innerHTML = initials;
+        }
+        label.textContent = (company_name || brand || "").slice(0, 10);
+        // Solo clickeable si tiene tienda
+        circle.style.cursor = company_slug ? "pointer" : "default";
+      }
+
+      function goToCompanyStore() {
+        if (!currentTryOnGarment?.company_slug) return;
+        location.href = `tienda.html?slug=${currentTryOnGarment.company_slug}`;
+      }
+
+      function openWardrobe() {
+        requireAuth(() => {
+          renderWardrobe();
+          document.getElementById("wardrobe-modal").classList.add("open");
+        });
+      }
+      function closeWardrobe() {
+        document.getElementById("wardrobe-modal").classList.remove("open");
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  SHEET DRAG
+      // ─────────────────────────────────────────────────────────────────────────────
+      function initSheetDrag() {
+        const sheet = document.getElementById("garment-sheet");
+        const handle = document.getElementById("sheet-drag-handle");
+        let startY = 0,
+          startTranslate = 0,
+          dragging = false;
+        const collapsed = `calc(var(--sheet-h) - 72px)`;
+
+        function getTranslate() {
+          const style = getComputedStyle(sheet);
+          const mat = new DOMMatrix(style.transform);
+          return mat.m42;
+        }
+
+        handle.addEventListener(
+          "touchstart",
+          (e) => {
+            startY = e.touches[0].clientY;
+            startTranslate = getTranslate();
+            dragging = true;
+            sheet.style.transition = "none";
+          },
+          { passive: true },
+        );
+
+        window.addEventListener(
+          "touchmove",
+          (e) => {
+            if (!dragging) return;
+            const dy = e.touches[0].clientY - startY;
+            const newT = Math.max(
+              0,
+              Math.min(
+                startTranslate + dy,
+                (parseFloat(
+                  getComputedStyle(document.documentElement).getPropertyValue(
+                    "--sheet-h",
+                  ) || "52",
+                ) *
+                  window.innerHeight) /
+                  100 -
+                  72,
+              ),
+            );
+            sheet.style.transform = `translateY(${newT}px)`;
+          },
+          { passive: true },
+        );
+
+        window.addEventListener("touchend", () => {
+          if (!dragging) return;
+          dragging = false;
+          sheet.style.transition = "";
+          const current = getTranslate();
+          const threshold = window.innerHeight * 0.15;
+          if (current < threshold) {
+            sheet.classList.remove("collapsed");
+            updateActionsVisibility(false);
+          } else {
+            sheet.classList.add("collapsed");
+            updateActionsVisibility(true);
+          }
+        });
+
+        // Click handle to toggle
+        handle.addEventListener("click", () => {
+          sheet.classList.toggle("collapsed");
+          updateActionsVisibility(sheet.classList.contains("collapsed"));
+        });
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  TOAST
+      // ─────────────────────────────────────────────────────────────────────────────
+      let toastTimeout;
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => t.classList.remove("show"), 2800);
+      }
+
+      // ─────────────────────────────────────────────────────────────────────────────
+
+      // ─────────────────────────────────────────────────────────────────────────────
+      //  SHOWCASE IMAGES
+      // ─────────────────────────────────────────────────────────────────────────────
+      async function loadShowcaseImages() {
+        try {
+          const resp = await fetch(`${API}/config/showcase`);
+          if (!resp.ok) return;
+          const data = await resp.json();
+          // data = { main: url|null, left: url|null, right: url|null, face: url|null }
+          Object.entries(data).forEach(([slot, url]) => {
+            if (url) {
+              const el = document.getElementById("showcase-" + slot);
+              if (el) el.src = url;
+            }
+          });
+        } catch (e) {
+          // fallback: keep Unsplash defaults
+        }
+      }
+
+      //  INIT
+      // ─────────────────────────────────────────────────────────────────────────────
+      document.addEventListener("DOMContentLoaded", async () => {
+        loadShowcaseImages(); // no await — non-blocking
+        await getToken(); // ensure JWT + userId are ready
+        if (_startAvatar) {
+          // Vino desde un look compartido — ir directo a crear avatar
+          goTo("screen-likeness");
+        } else if (pendingGarmentId) {
+          if (!avatarUrl || !userId) goToMain();
+          else {
+            initMainScreen();
+            goTo("screen-main");
+          }
+        } else if (avatarUrl && userId) {
+          initMainScreen();
+          goTo("screen-main");
+        }
+      });
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
