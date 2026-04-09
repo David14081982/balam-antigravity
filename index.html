@@ -2862,7 +2862,7 @@
       // ─────────────────────────────────────────────────────────────────────────────
       //  CONFIG
       // ─────────────────────────────────────────────────────────────────────────────
-      const API = "http://localhost:3018/api";
+      const API = window.location.hostname === "localhost" ? "http://localhost:3018/api" : "/api";
       let token = localStorage.getItem("balam_token") || null;
       let userId = null; // extracted from JWT sub claim
       let avatarUrl = localStorage.getItem("balam_avatar") || null;

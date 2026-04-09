@@ -370,8 +370,8 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.1; }
 </footer>
 
 <script>
-const API = 'http://localhost:3001/api';
-const TRYON_APP = 'doji-pwa/frontend/index.html';
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3018/api' : '/api';
+const TRYON_APP = window.location.hostname === 'localhost' ? '/index.html' : '/';
 
 const CATEGORY_LABELS = {
   all:            'Todo',

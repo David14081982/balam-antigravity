@@ -421,8 +421,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API   = 'http://localhost:3001/api';
-const ADMIN = 'http://localhost:3001/api/admin';
+const API   = window.location.hostname === 'localhost' ? 'http://localhost:3018/api' : '/api';
+const ADMIN = window.location.hostname === 'localhost' ? 'http://localhost:3018/api/admin' : '/api/admin';
 
 // ── Auth helpers ───────────────────────────────────────────────────────────
 function getToken() { return localStorage.getItem('admin_token'); }
