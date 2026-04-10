@@ -296,9 +296,33 @@ app.get('/tienda', (req, res) => {
   res.sendFile(path.join(__dirname, '../../tienda.html'));
 });
 
-// PWA files
-app.get('/manifest.json', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../manifest.json'));
+// PWA manifest — dinámico desde app_settings
+app.get('/manifest.json', async (req, res) => {
+  try {
+    const { data } = await supabase.from('app_settings').select('value').eq('key', 'app_config').maybeSingle();
+    const cfg = data?.value || {};
+    const manifest = {
+      name: cfg.name || 'Balam',
+      short_name: cfg.short_name || 'Balam',
+      description: cfg.description || 'Pruébate prendas de diseñador con tu propio avatar generado por IA',
+      start_url: '/',
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: cfg.background_color || '#FAFAF8',
+      theme_color: cfg.theme_color || '#1A1A18',
+      categories: ['fashion', 'shopping', 'lifestyle'],
+      icons: cfg.icon_url
+        ? [{ src: cfg.icon_url, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }]
+        : [
+            { src: '/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' },
+            { src: '/icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }
+          ]
+    };
+    res.setHeader('Content-Type', 'application/manifest+json');
+    res.json(manifest);
+  } catch(e) {
+    res.sendFile(path.join(__dirname, '../../manifest.json'));
+  }
 });
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
@@ -1391,6 +1415,25 @@ app.delete('/api/admin/showcase/:slot', verifySuperadmin, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ─── App icon upload (superadmin) ─────────────────────────────────────────────
+app.post('/api/admin/app-icon', verifySuperadmin, (req, res) => {
+  uploadShowcase.single('icon')(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'Archivo requerido' });
+    try {
+      const filename = `app-icon-${Date.now()}-${req.file.originalname}`;
+      const { data, error } = await supabase.storage.from('showcase').upload(filename, req.file.buffer, {
+        contentType: req.file.mimetype, upsert: true
+      });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('showcase').getPublicUrl(filename);
+      res.json({ success: true, iconUrl: publicUrl });
+    } catch(e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
 });
 
 // ─── Looks sharing ────────────────────────────────────────────────────────────

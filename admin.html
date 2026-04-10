@@ -265,6 +265,7 @@
     <button class="tab-btn" id="tab-btn-empresas" onclick="switchTab('empresas')">Empresas</button>
     <button class="tab-btn" id="tab-btn-apariencia" onclick="switchTab('apariencia')">Apariencia</button>
     <button class="tab-btn" id="tab-btn-ia" onclick="switchTab('ia')">Ajustes de IA</button>
+    <button class="tab-btn" id="tab-btn-app" onclick="switchTab('app')">App</button>
   </div>
 
   <!-- ══ TAB: AJUSTES DE IA ══════════════════════════════════════════════════ -->
@@ -289,6 +290,65 @@
         </div>
         <button class="btn btn-primary" onclick="saveIASettings()">
           <span class="btn-label">Guardar Cambios</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: APP ═════════════════════════════════════════════════════════ -->
+  <div id="tab-app" style="display:none">
+    <div class="container">
+      <div class="card" style="max-width:500px;margin:0 auto;">
+        <h2>Configuración de la App</h2>
+
+        <div class="field">
+          <label>Nombre de la app</label>
+          <input type="text" id="app-name" placeholder="Ej: Balam">
+          <p style="font-size:11px;color:#888;margin-top:4px;">Aparece al instalar la app en el celular.</p>
+        </div>
+
+        <div class="field">
+          <label>Nombre corto</label>
+          <input type="text" id="app-short-name" placeholder="Ej: Balam">
+          <p style="font-size:11px;color:#888;margin-top:4px;">Nombre bajo el ícono en la pantalla de inicio.</p>
+        </div>
+
+        <div class="field">
+          <label>Descripción</label>
+          <input type="text" id="app-description" placeholder="Descripción de la app">
+        </div>
+
+        <div class="field">
+          <label>Color del tema</label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="color" id="app-theme-color" value="#1A1A18" style="width:48px;height:36px;border:none;cursor:pointer;border-radius:6px;">
+            <input type="text" id="app-theme-color-hex" placeholder="#1A1A18" style="flex:1;" oninput="document.getElementById('app-theme-color').value=this.value">
+          </div>
+          <p style="font-size:11px;color:#888;margin-top:4px;">Color de la barra del navegador al abrir la app.</p>
+        </div>
+
+        <div class="field">
+          <label>Color de fondo (splash screen)</label>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input type="color" id="app-bg-color" value="#FAFAF8" style="width:48px;height:36px;border:none;cursor:pointer;border-radius:6px;">
+            <input type="text" id="app-bg-color-hex" placeholder="#FAFAF8" style="flex:1;" oninput="document.getElementById('app-bg-color').value=this.value">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Ícono de la app (PNG/SVG recomendado, mínimo 512×512)</label>
+          <div class="img-drop" id="app-icon-drop" onclick="document.getElementById('app-icon-input').click()" style="cursor:pointer;max-width:180px;">
+            <div class="placeholder" id="app-icon-placeholder">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="10" r="3"/><path d="M6 21c0-3 2.7-5 6-5s6 2 6 5"/></svg>
+              <p>Subir ícono</p>
+            </div>
+            <img id="app-icon-preview" style="display:none;width:100%;border-radius:12px;" alt="icono">
+          </div>
+          <input type="file" id="app-icon-input" accept="image/png,image/svg+xml,image/jpeg,image/webp" style="display:none" onchange="previewAppIcon(this)">
+        </div>
+
+        <button class="btn btn-primary" onclick="saveAppSettings()">
+          <span class="btn-label">Guardar y Publicar</span>
         </button>
       </div>
     </div>
@@ -468,7 +528,7 @@ function showApp() {
 
 // ── Tab switching ──────────────────────────────────────────────────────────
 function switchTab(name) {
-  ['catalogo','empresas','apariencia','ia'].forEach(t => {
+  ['catalogo','empresas','apariencia','ia','app'].forEach(t => {
     const el = document.getElementById('tab-' + t);
     const btn = document.getElementById('tab-btn-' + t);
     if (el) el.style.display = name === t ? '' : 'none';
@@ -477,6 +537,84 @@ function switchTab(name) {
   if (name === 'empresas')   loadCompanies();
   if (name === 'apariencia') loadShowcase();
   if (name === 'ia')         loadIASettings();
+  if (name === 'app')        loadAppSettings();
+}
+
+// ── App Settings ──────────────────────────────────────────────────────────────
+async function loadAppSettings() {
+  try {
+    const resp = await fetch(`${ADMIN}/settings`, { headers: authHeaders() });
+    const settings = await resp.json();
+    if (!resp.ok) throw new Error(settings.error);
+    const app = settings.find(s => s.key === 'app_config');
+    if (app && app.value) {
+      const v = app.value;
+      if (v.name)        document.getElementById('app-name').value = v.name;
+      if (v.short_name)  document.getElementById('app-short-name').value = v.short_name;
+      if (v.description) document.getElementById('app-description').value = v.description;
+      if (v.theme_color) {
+        document.getElementById('app-theme-color').value = v.theme_color;
+        document.getElementById('app-theme-color-hex').value = v.theme_color;
+      }
+      if (v.background_color) {
+        document.getElementById('app-bg-color').value = v.background_color;
+        document.getElementById('app-bg-color-hex').value = v.background_color;
+      }
+      if (v.icon_url) {
+        document.getElementById('app-icon-preview').src = v.icon_url;
+        document.getElementById('app-icon-preview').style.display = 'block';
+        document.getElementById('app-icon-placeholder').style.display = 'none';
+      }
+    }
+  } catch(e) { toast(e.message, true); }
+}
+
+function previewAppIcon(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('app-icon-preview').src = e.target.result;
+    document.getElementById('app-icon-preview').style.display = 'block';
+    document.getElementById('app-icon-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveAppSettings() {
+  const name        = document.getElementById('app-name').value.trim();
+  const short_name  = document.getElementById('app-short-name').value.trim();
+  const description = document.getElementById('app-description').value.trim();
+  const theme_color = document.getElementById('app-theme-color-hex').value.trim() || document.getElementById('app-theme-color').value;
+  const background_color = document.getElementById('app-bg-color-hex').value.trim() || document.getElementById('app-bg-color').value;
+
+  if (!name) return toast('El nombre es requerido', true);
+
+  try {
+    // Subir ícono si se seleccionó uno nuevo
+    let icon_url = null;
+    const iconFile = document.getElementById('app-icon-input').files[0];
+    if (iconFile) {
+      const fd = new FormData();
+      fd.append('icon', iconFile);
+      const uploadResp = await fetch(`${ADMIN}/app-icon`, {
+        method: 'POST', headers: authHeaders(), body: fd
+      });
+      const uploadData = await uploadResp.json();
+      if (!uploadResp.ok) throw new Error(uploadData.error);
+      icon_url = uploadData.iconUrl;
+    }
+
+    // Guardar configuración
+    const value = { name, short_name, description, theme_color, background_color };
+    if (icon_url) value.icon_url = icon_url;
+
+    await fetch(`${ADMIN}/settings`, {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'app_config', value })
+    });
+    toast('✓ App actualizada. Los cambios aplican en la próxima visita.');
+  } catch(e) { toast(e.message, true); }
 }
 
 async function loadIASettings() {
