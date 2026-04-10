@@ -296,6 +296,23 @@ app.get('/tienda', (req, res) => {
   res.sendFile(path.join(__dirname, '../../tienda.html'));
 });
 
+// PWA files
+app.get('/manifest.json', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../manifest.json'));
+});
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, '../../sw.js'));
+});
+app.get('/icon-192.svg', (req, res) => {
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.sendFile(path.join(__dirname, '../../icon-192.svg'));
+});
+app.get('/icon-512.svg', (req, res) => {
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.sendFile(path.join(__dirname, '../../icon-512.svg'));
+});
+
 // Health check (public)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', version: '3.0.0', timestamp: new Date().toISOString(), db: 'supabase' });
